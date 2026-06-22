@@ -1,5 +1,5 @@
 fastapi
 uvicorn
-python-dotenv
 google-genai
-supabase==2.23.0
+python-dotenv
+httpx

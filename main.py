@@ -1,15 +1,14 @@
 import os
+import httpx  # Standard high-performance HTTP client library
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from google import genai
 from dotenv import load_dotenv
-from supabase import create_client, Client
-from supabase.lib.client_options import ClientOptions  # Core options constructor fix
 
 # Securely load environment variables
 load_dotenv()
 
-app = FastAPI(title="Vibe Coder AI Knowledge Base with Cloud Persistence")
+app = FastAPI(title="Vibe Coder AI Knowledge Base with Direct Cloud REST Sync")
 
 # Enable smooth frontend interaction across different domains
 app.add_middleware(
@@ -20,47 +19,50 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
-# 💾 Initialize Supabase Cloud Database Client 
-# 💾 Initialize Supabase Cloud Database Client 
+# 🔑 Fetch environment variables cleanly
 SUPABASE_URL = os.environ.get("SUPABASE_URL")
 SUPABASE_KEY = os.environ.get("SUPABASE_KEY")
+GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
 
-if not SUPABASE_URL or not SUPABASE_KEY:
-    print("⚠️ Supabase credentials missing from environment setup!")
+# Trim accidental spaces or trailing slashes automatically
+if SUPABASE_URL:
+    SUPABASE_URL = SUPABASE_URL.strip().rstrip("/")
 
-# The direct client call works beautifully with legacy JWT tokens
-supabase_client: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
-
-
-
-if not SUPABASE_URL or not SUPABASE_KEY:
-    print("⚠️ Supabase credentials missing from environment setup!")
-
-# Initializing client by wrapping schema options to handle new scoped publishable tokens safely
-supabase_client: Client = create_client(
-    SUPABASE_URL, 
-    SUPABASE_KEY,
-    options=ClientOptions(schema="public")
-)
-
-# 🚀 Initialize Gemini AI Engine Client
+# 🚀 Initialize Gemini Client
 try:
-    client = genai.Client(api_key=os.environ.get("GEMINI_API_KEY"))
+    client = genai.Client(api_key=GEMINI_API_KEY)
 except Exception as e:
     print(f"⚠️ Gemini initialization warning: {e}")
 
 
+def get_auth_headers():
+    """Generates standard explicit headers for direct Supabase REST authentication."""
+    return {
+        "apikey": SUPABASE_KEY,
+        "Authorization": f"Bearer {SUPABASE_KEY}",
+        "Content-Type": "application/json",
+        "Prefer": "return=representation"  # Returns payload data on write actions
+        }
+
+
 @app.get("/")
 def read_root():
-    return {"status": "Online", "message": "Persistent cloud backend running successfully!"}
+    return {"status": "Online", "message": "Direct REST persistent cloud backend running successfully!"}
 
 
 @app.post("/clear")
 def clear_database():
-    """Wipes the database table completely clean by deleting all matching records."""
+    """Wipes the database table completely clean via a direct REST DELETE path request."""
+    # Target path: targets table and checks where ID is not null
+    target_url = f"{SUPABASE_URL}/rest/v1/documents?id=neq.none"
+    
     try:
-        supabase_client.table("documents").delete().neq("id", "none").execute()
+        with httpx.Client() as http_client:
+            res = http_client.delete(target_url, headers=get_auth_headers())
+            
+        if res.status_code not in [200, 204]:
+            raise Exception(res.text)
+            
         return {"status": "success", "message": "Cloud database wiped completely clean."}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Database wipe failed: {str(e)}")
@@ -69,34 +71,49 @@ def clear_database():
 @app.post("/add")
 def add_to_database(doc_id: str, text_content: str, mode: str = "check"):
     """
-    Stores and manages documents inside Supabase Cloud Storage.
-    Modes: 'check', 'overwrite', 'append'
+    Stores and manages documents inside Supabase via explicit HTTP REST commands.
+    Bypasses SDK translation layers entirely to guarantee route path generation accuracy.
     """
     if not doc_id or not text_content:
         raise HTTPException(status_code=400, detail="Missing required parameters")
     
+    # Direct explicit endpoint table path query string
+    select_url = f"{SUPABASE_URL}/rest/v1/documents?id=eq.{encode_query_param(doc_id)}"
+    upsert_url = f"{SUPABASE_URL}/rest/v1/documents"
+    
     try:
-        # Check if the document ID already exists in the cloud table
-        existing_record = supabase_client.table("documents").select("*").eq("id", doc_id).execute()
+        headers = get_auth_headers()
         
-        if existing_record.data and mode == "check":
-            return {
-                "status": "exists_warning", 
-                "message": f"The ID '{doc_id}' already exists in the cloud table. What would you like to do?",
-                "existing_text": existing_record.data[0]["content"]
-            }
-        
-        if mode == "append" and existing_record.data:
-            # Combine old text with new text using a newline break
-            updated_text = existing_record.data[0]["content"] + "\n" + text_content
-            supabase_client.table("documents").update({"content": updated_text}).eq("id", doc_id).execute()
-            return {"status": "success", "message": f"Successfully appended data to record '{doc_id}'."}
-        
-        else:
-            # Overwrite or create brand new entry using upsert
-            supabase_client.table("documents").upsert({"id": doc_id, "content": text_content}).execute()
-            return {"status": "success", "message": f"Document '{doc_id}' stored safely in cloud storage."}
+        with httpx.Client() as http_client:
+            # 1. Fetch record if it exists
+            get_res = http_client.get(select_url, headers=headers)
+            existing_data = get_res.json() if get_res.status_code == 200 else []
             
+            # 2. Check duplicate trigger validation
+            if existing_data and mode == "check":
+                return {
+                    "status": "exists_warning", 
+                    "message": f"The ID '{doc_id}' already exists in the cloud table. What would you like to do?",
+                    "existing_text": existing_data[0]["content"]
+                }
+            
+            # 3. Handle data mutation paths
+            if mode == "append" and existing_data:
+                updated_text = existing_data[0]["content"] + "\n" + text_content
+                patch_url = f"{SUPABASE_URL}/rest/v1/documents?id=eq.{encode_query_param(doc_id)}"
+                http_client.patch(patch_url, json={"content": updated_text}, headers=headers)
+                return {"status": "success", "message": f"Successfully appended data to record '{doc_id}'."}
+            
+            else:
+                # Default behaviour: Standard Upsert insertion path
+                # Sets resolution strategy to override conflicts natively
+                upsert_headers = headers.copy()
+                upsert_headers["Resolution"] = "merge"
+                
+                payload = {"id": doc_id, "content": text_content}
+                http_client.post(upsert_url, json=payload, headers=upsert_headers)
+                return {"status": "success", "message": f"Document '{doc_id}' stored safely in cloud storage."}
+                
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Cloud write failure: {str(e)}")
 
@@ -104,13 +121,15 @@ def add_to_database(doc_id: str, text_content: str, mode: str = "check"):
 @app.post("/ask")
 def ask_ai(question: str):
     """Retrieves all combined text context from Supabase and queries Gemini 2.5 Flash."""
+    target_url = f"{SUPABASE_URL}/rest/v1/documents?select=content"
+    
     try:
-        # Pull all documents from our cloud table
-        records = supabase_client.table("documents").select("content").execute()
+        with httpx.Client() as http_client:
+            res = http_client.get(target_url, headers=get_auth_headers())
+            records = res.json() if res.status_code == 200 else []
         
-        if records.data:
-            # Join all content fields together to build context
-            context = " ".join([row["content"] for row in records.data])
+        if records:
+            context = " ".join([row["content"] for row in records])
         else:
             context = "No custom documents uploaded yet."
 
@@ -136,3 +155,8 @@ def ask_ai(question: str):
             "retrieved_context": "System Warning",
             "answer": friendly_answer
         }
+
+def encode_query_param(val: str) -> str:
+    """Helper method to format request query text values safely."""
+    import urllib.parse
+    return urllib.parse.quote(val)
