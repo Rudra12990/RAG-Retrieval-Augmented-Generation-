@@ -11,129 +11,30 @@
         .section { margin-bottom: 25px; padding-bottom: 25px; border-bottom: 1px solid #eee; }
         label { display: block; font-weight: 600; margin-bottom: 8px; font-size: 14px; }
         input, textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; font-size: 14px; margin-bottom: 12px; }
-        button { background: #0070f3; color: white; border: none; padding: 10px 16px; border-radius: 6px; cursor: pointer; font-weight: 500; font-size: 14px; width: 100%; margin-bottom: 10px; }
+        
+        /* Buttons */
+        button { background: #0070f3; color: white; border: none; padding: 10px 16px; border-radius: 6px; cursor: pointer; font-weight: 500; font-size: 14px; width: 100%; margin-bottom: 10px; transition: background 0.2s; }
         button:hover { background: #0060df; }
+        .btn-secondary { background: #64748b; }
+        .btn-secondary:hover { background: #475569; }
+        .btn-success { background: #10b981; }
+        .btn-success:hover { background: #059669; }
+        .btn-danger { background: #dc3545; }
+        .btn-danger:hover { background: #bd2130; }
+        
         .output { background: #f8f9fa; padding: 15px; border-left: 4px solid #10b981; border-radius: 4px; margin-top: 15px; font-size: 14px; white-space: pre-wrap; display: none; }
         
         /* Modern Accordion Dropdown Styling */
         details { margin-top: 15px; background-color: #f8f9fa; border: 1px solid #e2e8f0; padding: 12px; border-radius: 6px; }
         summary { font-weight: 600; cursor: pointer; color: #4a5568; font-size: 14px; outline: none; user-select: none; }
         .context-box { margin-top: 10px; white-space: pre-wrap; font-family: monospace; font-size: 13px; color: #4a5568; line-height: 1.4; background: #edf2f7; padding: 10px; border-radius: 4px; }
-    </style>
-</head>
-<body>
 
-<div class="container">
-    <h1>🧠 Vibe Coder AI App</h1>
-    
-    <div class="section">
-        <h3>1. Add Information to Vector DB</h3>
-        <label>Document Title / ID</label>
-        <input type="text" id="docId" placeholder="e.g., standard-operating-procedure">
-        <label>Document Text Content</label>
-        <textarea id="docText" rows="3" placeholder="Paste the text or information you want the AI to remember here..."></textarea>
-        <button onclick="addDocument()">Save to Vector Database</button>
-        <div id="addOutput" class="output" style="border-left-color: #0070f3;"></div>
-        <button onclick="clearDB()" style="background-color: #dc3545; color: white; margin-bottom: 0;">Clear Database</button>
-    </div>
-
-    <div class="section" style="border: none; margin-bottom: 0; padding-bottom: 0;">
-        <h3>2. Ask AI Based on Knowledge</h3>
-        <label>Your Question</label>
-        <input type="text" id="question" placeholder="Ask something about your stored info...">
-        <button onclick="askAI()" style="background: #10b981;">Query App</button>
+        /* Modern Custom Modal Background overlay */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.4); display: flex; align-items: center; justify-content: center; z-index: 1000; opacity: 0; pointer-events: none; transition: opacity 0.2s ease; }
+        .modal-overlay.active { opacity: 1; pointer-events: auto; }
         
-        <div id="askOutput" class="output"></div>
-        
-        <details id="contextDropdown" style="display: none;">
-            <summary>🔍 View Retrieved Database Context (Click to expand)</summary>
-            <div id="context-display" class="context-box"></div>
-        </details>
-    </div>
-</div>
-
-<script>
-    const BACKEND_URL = "https://rag-retrieval-augmented-generation.onrender.com";
-
-    async function addDocument(mode = "check") {
-        const id = document.getElementById('docId').value;
-        const text = document.getElementById('docText').value;
-        const outDiv = document.getElementById('addOutput');
-        
-        if(!id || !text) return alert("Please fill in both fields");
-
-        outDiv.style.display = "block";
-        outDiv.innerText = "Processing...";
-
-        try {
-            const res = await fetch(`${BACKEND_URL}/add?doc_id=${encodeURIComponent(id)}&text_content=${encodeURIComponent(text)}&mode=${mode}`, { method: 'POST' });
-            const data = await res.json();
-            
-            if (data.status === "exists_warning") {
-                const choice = prompt(
-                    `${data.message}\n\nType '1' to OVERWRITE the existing data.\nType '2' to APPEND (add to) the existing data.\nType '3' or click Cancel to stop.`
-                );
-
-                if (choice === "1") {
-                    addDocument("overwrite");
-                } else if (choice === "2") {
-                    addDocument("append");
-                } else {
-                    outDiv.innerText = "Operation canceled. No changes were made.";
-                }
-            } else {
-                outDiv.innerText = data.message || JSON.stringify(data);
-            }
-        } catch (err) {
-            outDiv.innerText = "Error linking to backend server. Make sure your Python server is running.";
-        }
-    }
-
-    async function askAI() {
-        const q = document.getElementById('question').value;
-        const outDiv = document.getElementById('askOutput');
-        const dropdown = document.getElementById('contextDropdown');
-        const contextDiv = document.getElementById('context-display');
-        
-        if(!q) return alert("Please type a question");
-
-        outDiv.style.display = "block";
-        dropdown.style.display = "none"; 
-        outDiv.innerText = "Searching Vector DB & querying Gemini...";
-
-        try {
-            const res = await fetch(`${BACKEND_URL}/ask?question=${encodeURIComponent(q)}`, { method: 'POST' });
-            const data = await res.json();
-            
-            if (data.error) {
-                outDiv.innerText = data.error;
-            } else {
-                const context = data.retrieved_context || "No context found.";
-                const answer = data.answer || "No answer generated.";
-                
-                outDiv.innerText = answer;
-                contextDiv.innerText = context;
-                dropdown.style.display = "block"; 
-            }
-        } catch (err) {
-            outDiv.innerText = "Error linking to backend server.";
-        }
-    }
-
-    async function clearDB() {
-        if(!confirm("Are you sure you want to clear your local database memory?")) return;
-        try {
-            const response = await fetch(`${BACKEND_URL}/clear`, { method: 'POST' });
-            const data = await response.json();
-            alert(data.message);
-            
-            document.getElementById('askOutput').style.display = "none";
-            document.getElementById('contextDropdown').style.display = "none";
-            document.getElementById('addOutput').style.display = "none";
-        } catch (err) {
-            alert("Failed to wipe database environment.");
-        }
-    }
-</script>
-</body>
-</html>
+        /* Modal Window Box */
+        .modal-box { background: white; padding: 25px; border-radius: 12px; max-width: 450px; width: 90%; box-shadow: 0 10px 25px rgba(0,0,0,0.15); text-align: center; transform: scale(0.9); transition: transform 0.2s ease; }
+        .modal-overlay.active .modal-box { transform: scale(1); }
+        .modal-box h4 { margin-top: 0; color: #1a1a1a; font-size: 18px; }
+        .modal-box p { color: #64748b; font-size: 14px; margin-bottom: 20px; line-height: 1.5; }
