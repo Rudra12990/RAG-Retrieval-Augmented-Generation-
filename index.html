@@ -30,6 +30,7 @@
         <textarea id="docText" rows="3" placeholder="Paste the text or information you want the AI to remember here..."></textarea>
         <button onclick="addDocument()">Save to Vector Database</button>
         <div id="addOutput" class="output"></div>
+        <button onclick="clearDB()" style="background-color: #dc3545; color: white;">Clear Database</button>
     </div>
 
     <!-- Section 2: Ask Question -->
@@ -90,6 +91,11 @@
     } catch (err) {
         outDiv.innerText = "Error linking to backend server.";
     }
+    async function clearDB() {
+    const response = await fetch(`${BACKEND_URL}/clear`, { method: 'POST' });
+    const data = await response.json();
+    alert(data.message);
+}
 }
 </script>
 </body>

@@ -38,6 +38,10 @@ def add_to_database(doc_id: str, text_content: str):
     
     LOCAL_DATABASE[doc_id] = text_content
     return {"status": "success", "message": f"Document '{doc_id}' stored safely."}
+@app.post("/clear")
+def clear_database():
+    LOCAL_DATABASE.clear()
+    return {"status": "success", "message": "Local database wiped completely clean."}
 
 @app.post("/ask")
 def ask_ai(question: str):
