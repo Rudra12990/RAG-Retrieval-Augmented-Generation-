@@ -11,9 +11,14 @@
         .section { margin-bottom: 25px; padding-bottom: 25px; border-bottom: 1px solid #eee; }
         label { display: block; font-weight: 600; margin-bottom: 8px; font-size: 14px; }
         input, textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; font-size: 14px; margin-bottom: 12px; }
-        button { background: #0070f3; color: white; border: none; padding: 10px 16px; border-radius: 6px; cursor: pointer; font-weight: 500; font-size: 14px; width: 100%; }
+        button { background: #0070f3; color: white; border: none; padding: 10px 16px; border-radius: 6px; cursor: pointer; font-weight: 500; font-size: 14px; width: 100%; margin-bottom: 10px; }
         button:hover { background: #0060df; }
-        .output { background: #f8f9fa; padding: 15px; border-left: 4px solid #0070f3; border-radius: 4px; margin-top: 15px; font-size: 14px; white-space: pre-wrap; display: none; }
+        .output { background: #f8f9fa; padding: 15px; border-left: 4px solid #10b981; border-radius: 4px; margin-top: 15px; font-size: 14px; white-space: pre-wrap; display: none; }
+        
+        /* Modern Accordion Dropdown Styling */
+        details { margin-top: 15px; background-color: #f8f9fa; border: 1px solid #e2e8f0; padding: 12px; border-radius: 6px; }
+        summary { font-weight: 600; cursor: pointer; color: #4a5568; font-size: 14px; outline: none; user-select: none; }
+        .context-box { margin-top: 10px; white-space: pre-wrap; font-family: monospace; font-size: 13px; color: #4a5568; line-height: 1.4; background: #edf2f7; padding: 10px; border-radius: 4px; }
     </style>
 </head>
 <body>
@@ -29,8 +34,8 @@
         <label>Document Text Content</label>
         <textarea id="docText" rows="3" placeholder="Paste the text or information you want the AI to remember here..."></textarea>
         <button onclick="addDocument()">Save to Vector Database</button>
-        <div id="addOutput" class="output"></div>
-        <button onclick="clearDB()" style="background-color: #dc3545; color: white;">Clear Database</button>
+        <div id="addOutput" class="output" style="border-left-color: #0070f3;"></div>
+        <button onclick="clearDB()" style="background-color: #dc3545; color: white; margin-bottom: 0;">Clear Database</button>
     </div>
 
     <!-- Section 2: Ask Question -->
@@ -39,7 +44,15 @@
         <label>Your Question</label>
         <input type="text" id="question" placeholder="Ask something about your stored info...">
         <button onclick="askAI()" style="background: #10b981;">Query App</button>
+        
+        <!-- Clean Text Generation Output Area -->
         <div id="askOutput" class="output"></div>
+        
+        <!-- Collapsible Dropdown Context Component -->
+        <details id="contextDropdown" style="display: none;">
+            <summary>🔍 View Retrieved Database Context (Click to expand)</summary>
+            <div id="context-display" class="context-box"></div>
+        </details>
     </div>
 </div>
 
@@ -66,37 +79,54 @@
     }
 
     async function askAI() {
-    const q = document.getElementById('question').value;
-    const outDiv = document.getElementById('askOutput');
-    
-    if(!q) return alert("Please type a question");
-
-    outDiv.style.display = "block";
-    outDiv.innerText = "Searching Vector DB & querying Gemini...";
-
-    try {
-        const res = await fetch(`${BACKEND_URL}/ask?question=${encodeURIComponent(q)}`, { method: 'POST' });
-        const data = await res.json();
+        const q = document.getElementById('question').value;
+        const outDiv = document.getElementById('askOutput');
+        const dropdown = document.getElementById('contextDropdown');
+        const contextDiv = document.getElementById('context-display');
         
-        // If the backend sent an explicit error message string
-        if (data.error) {
-            outDiv.innerText = data.error;
-        } else {
-            // Using the exact keys matching main.py: "retrieved_context" and "answer"
-            const context = data.retrieved_context || "No context found.";
-            const answer = data.answer || "No answer generated.";
+        if(!q) return alert("Please type a question");
+
+        outDiv.style.display = "block";
+        dropdown.style.display = "none"; // Hide old container during fetch
+        outDiv.innerText = "Searching Vector DB & querying Gemini...";
+
+        try {
+            const res = await fetch(`${BACKEND_URL}/ask?question=${encodeURIComponent(q)}`, { method: 'POST' });
+            const data = await res.json();
             
-            outDiv.innerText = `[Retrieved Context from DB]:\n${context}\n\n[Gemini Answer]:\n${answer}`;
+            if (data.error) {
+                outDiv.innerText = data.error;
+            } else {
+                const context = data.retrieved_context || "No context found.";
+                const answer = data.answer || "No answer generated.";
+                
+                // 1. Populate the main text panel with only the smart reply
+                outDiv.innerText = answer;
+                
+                // 2. Load context data silently into the dropdown menu component
+                contextDiv.innerText = context;
+                dropdown.style.display = "block"; 
+            }
+        } catch (err) {
+            outDiv.innerText = "Error linking to backend server.";
         }
-    } catch (err) {
-        outDiv.innerText = "Error linking to backend server.";
     }
+
     async function clearDB() {
-    const response = await fetch(`${BACKEND_URL}/clear`, { method: 'POST' });
-    const data = await response.json();
-    alert(data.message);
-}
-}
+        if(!confirm("Are you sure you want to clear your local database memory?")) return;
+        try {
+            const response = await fetch(`${BACKEND_URL}/clear`, { method: 'POST' });
+            const data = await response.json();
+            alert(data.message);
+            
+            // Clean interface readouts
+            document.getElementById('askOutput').style.display = "none";
+            document.getElementById('contextDropdown').style.display = "none";
+            document.getElementById('addOutput').style.display = "none";
+        } catch (err) {
+            alert("Failed to wipe database environment.");
+        }
+    }
 </script>
 </body>
 </html>
