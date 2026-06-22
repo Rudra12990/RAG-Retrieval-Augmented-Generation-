@@ -65,7 +65,14 @@ def ask_ai(question: str):
             "answer": response.text
         }
     except Exception as e:
+        error_msg = str(e)
+        # Check if the error is Google's 503 traffic spike
+        if "503" in error_msg or "UNAVAILABLE" in error_msg:
+            friendly_answer = "⚠️ Google's AI servers are currently experiencing a temporary high-demand traffic spike. Please wait 10 seconds and click 'Query App' again!"
+        else:
+            friendly_answer = f"Gemini Query Failed: {error_msg}"
+
         return {
-            "retrieved_context": "System Error",
-            "answer": f"Gemini Query Failed: {str(e)}"
+            "retrieved_context": "System Warning",
+            "answer": friendly_answer
         }
