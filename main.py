@@ -19,9 +19,22 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# 💾 Initialize Supabase Cloud Database Client
+
+from postgrest.exceptions import APIError # Added to help handle raw database readouts safely
+
+# 💾 Initialize Supabase Cloud Database Client with explicit Schema Routing
 SUPABASE_URL = os.environ.get("SUPABASE_URL")
 SUPABASE_KEY = os.environ.get("SUPABASE_KEY")
+
+if not SUPABASE_URL or not SUPABASE_KEY:
+    print("⚠️ Supabase credentials missing from environment setup!")
+
+# We pass options to explicitly bind your new scoped key to the public schema path
+supabase_client: Client = create_client(
+    SUPABASE_URL, 
+    SUPABASE_KEY,
+    options={"schema": "public"}
+)
 
 if not SUPABASE_URL or not SUPABASE_KEY:
     print("⚠️ Supabase credentials missing from environment setup!")
