@@ -2,4 +2,4 @@ fastapi
 uvicorn
 python-dotenv
 google-genai
-supabase
+supabase==2.23.0
