@@ -22,15 +22,17 @@ app.add_middleware(
 
 
 # 💾 Initialize Supabase Cloud Database Client 
+# 💾 Initialize Supabase Cloud Database Client 
 SUPABASE_URL = os.environ.get("SUPABASE_URL")
 SUPABASE_KEY = os.environ.get("SUPABASE_KEY")
 
 if not SUPABASE_URL or not SUPABASE_KEY:
     print("⚠️ Supabase credentials missing from environment setup!")
 
-# 🎯 FIX: We completely drop ClientOptions to avoid the SDK's internal 'storage' attribute bug.
-# We pass the url and your publishable key directly to let the library initialize its default structures.
+# The direct client call works beautifully with legacy JWT tokens
 supabase_client: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
+
+
 
 if not SUPABASE_URL or not SUPABASE_KEY:
     print("⚠️ Supabase credentials missing from environment setup!")
