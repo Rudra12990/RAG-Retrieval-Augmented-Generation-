@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Knowledge Base</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f4f6f9; margin: 0; padding: 40px; color: #333; }
+        .container { max-width: 600px; background: white; margin: 0 auto; padding: 30px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        h1 { margin-top: 0; color: #1a1a1a; font-size: 24px; text-align: center; }
+        .section { margin-bottom: 25px; padding-bottom: 25px; border-bottom: 1px solid #eee; }
+        label { display: block; font-weight: 600; margin-bottom: 8px; font-size: 14px; }
+        input, textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; font-size: 14px; margin-bottom: 12px; }
+        button { background: #0070f3; color: white; border: none; padding: 10px 16px; border-radius: 6px; cursor: pointer; font-weight: 500; font-size: 14px; width: 100%; }
+        button:hover { background: #0060df; }
+        .output { background: #f8f9fa; padding: 15px; border-left: 4px solid #0070f3; border-radius: 4px; margin-top: 15px; font-size: 14px; white-space: pre-wrap; display: none; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>🧠 Vibe Coder AI App</h1>
+    
+    <!-- Section 1: Add Document -->
+    <div class="section">
+        <h3>1. Add Information to Vector DB</h3>
+        <label>Document Title / ID</label>
+        <input type="text" id="docId" placeholder="e.g., standard-operating-procedure">
+        <label>Document Text Content</label>
+        <textarea id="docText" rows="3" placeholder="Paste the text or information you want the AI to remember here..."></textarea>
+        <button onclick="addDocument()">Save to Vector Database</button>
+        <div id="addOutput" class="output"></div>
+    </div>
+
+    <!-- Section 2: Ask Question -->
+    <div class="section" style="border: none; margin-bottom: 0; padding-bottom: 0;">
+        <h3>2. Ask AI Based on Knowledge</h3>
+        <label>Your Question</label>
+        <input type="text" id="question" placeholder="Ask something about your stored info...">
+        <button onclick="askAI()" style="background: #10b981;">Query App</button>
+        <div id="askOutput" class="output"></div>
+    </div>
+</div>
+
+<script>
+    const BACKEND_URL = "http://127.0.0.1:8000";
+
+    async function addDocument() {
+        const id = document.getElementById('docId').value;
+        const text = document.getElementById('docText').value;
+        const outDiv = document.getElementById('addOutput');
+        
+        if(!id || !text) return alert("Please fill in both fields");
+
+        outDiv.style.display = "block";
+        outDiv.innerText = "Saving...";
+
+        try {
+            const res = await fetch(`${BACKEND_URL}/add?doc_id=${encodeURIComponent(id)}&text_content=${encodeURIComponent(text)}`, { method: 'POST' });
+            const data = await res.json();
+            outDiv.innerText = data.message || JSON.stringify(data);
+        } catch (err) {
+            outDiv.innerText = "Error linking to backend server. Make sure your Python server is running.";
+        }
+    }
+
+    async function askAI() {
+    const q = document.getElementById('question').value;
+    const outDiv = document.getElementById('askOutput');
+    
+    if(!q) return alert("Please type a question");
+
+    outDiv.style.display = "block";
+    outDiv.innerText = "Searching Vector DB & querying Gemini...";
+
+    try {
+        const res = await fetch(`${BACKEND_URL}/ask?question=${encodeURIComponent(q)}`, { method: 'POST' });
+        const data = await res.json();
+        
+        // If the backend sent an explicit error message string
+        if (data.error) {
+            outDiv.innerText = data.error;
+        } else {
+            // Using the exact keys matching main.py: "retrieved_context" and "answer"
+            const context = data.retrieved_context || "No context found.";
+            const answer = data.answer || "No answer generated.";
+            
+            outDiv.innerText = `[Retrieved Context from DB]:\n${context}\n\n[Gemini Answer]:\n${answer}`;
+        }
+    } catch (err) {
+        outDiv.innerText = "Error linking to backend server.";
+    }
+}
+</script>
+</body>
+</html>
