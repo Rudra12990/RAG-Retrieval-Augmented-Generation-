@@ -4,6 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from google import genai
 from dotenv import load_dotenv
 from supabase import create_client, Client
+from supabase.lib.client_options import ClientOptions  # Core options constructor fix
 
 # Securely load environment variables
 load_dotenv()
@@ -19,26 +20,19 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
-from postgrest.exceptions import APIError # Added to help handle raw database readouts safely
-
-# 💾 Initialize Supabase Cloud Database Client with explicit Schema Routing
+# 💾 Initialize Supabase Cloud Database Client with correct configuration routing
 SUPABASE_URL = os.environ.get("SUPABASE_URL")
 SUPABASE_KEY = os.environ.get("SUPABASE_KEY")
 
 if not SUPABASE_URL or not SUPABASE_KEY:
     print("⚠️ Supabase credentials missing from environment setup!")
 
-# We pass options to explicitly bind your new scoped key to the public schema path
+# Initializing client by wrapping schema options to handle new scoped publishable tokens safely
 supabase_client: Client = create_client(
     SUPABASE_URL, 
     SUPABASE_KEY,
-    options={"schema": "public"}
+    options=ClientOptions(schema="public")
 )
-
-if not SUPABASE_URL or not SUPABASE_KEY:
-    print("⚠️ Supabase credentials missing from environment setup!")
-supabase_client: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 # 🚀 Initialize Gemini AI Engine Client
 try:
@@ -56,7 +50,6 @@ def read_root():
 def clear_database():
     """Wipes the database table completely clean by deleting all matching records."""
     try:
-        # Deletes all entries where id is not null (everything)
         supabase_client.table("documents").delete().neq("id", "none").execute()
         return {"status": "success", "message": "Cloud database wiped completely clean."}
     except Exception as e:
@@ -91,7 +84,6 @@ def add_to_database(doc_id: str, text_content: str, mode: str = "check"):
         
         else:
             # Overwrite or create brand new entry using upsert
-            # Upsert will automatically insert if new, or overwrite if id matches
             supabase_client.table("documents").upsert({"id": doc_id, "content": text_content}).execute()
             return {"status": "success", "message": f"Document '{doc_id}' stored safely in cloud storage."}
             
