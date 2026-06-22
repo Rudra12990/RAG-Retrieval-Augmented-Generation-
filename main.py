@@ -9,7 +9,7 @@ load_dotenv()
 
 app = FastAPI(title="Vibe Coder AI Knowledge Base")
 
-# Enable smooth frontend interaction
+# Enable smooth frontend interaction across different domains
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -18,9 +18,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Initialize the modern client. It automatically finds GEMINI_API_KEY inside your .env file!
+# Initialize the modern client by pulling the key from the loaded environment setup
 try:
-    client = genai.Client()
+    client = genai.Client(api_key=os.environ.get("GEMINI_API_KEY"))
 except Exception as e:
     print(f"⚠️ Initialization warning: {e}")
 
@@ -31,20 +31,46 @@ LOCAL_DATABASE = {}
 def read_root():
     return {"status": "Online", "message": "Demo backend running successfully!"}
 
-@app.post("/add")
-def add_to_database(doc_id: str, text_content: str):
-    if not doc_id or not text_content:
-        raise HTTPException(status_code=400, detail="Missing data")
-    
-    LOCAL_DATABASE[doc_id] = text_content
-    return {"status": "success", "message": f"Document '{doc_id}' stored safely."}
 @app.post("/clear")
 def clear_database():
+    """Wipes the local in-memory database completely clean."""
     LOCAL_DATABASE.clear()
     return {"status": "success", "message": "Local database wiped completely clean."}
 
+@app.post("/add")
+def add_to_database(doc_id: str, text_content: str, mode: str = "check"):
+    """
+    Stores text documents inside our local memory database.
+    Modes: 
+      - 'check': Warns if the ID exists.
+      - 'overwrite': Replaces the old data.
+      - 'append': Combines old and new data together.
+    """
+    if not doc_id or not text_content:
+        raise HTTPException(status_code=400, detail="Missing data")
+    
+    # Check if ID already exists and user hasn't made a decision yet
+    if doc_id in LOCAL_DATABASE and mode == "check":
+        return {
+            "status": "exists_warning", 
+            "message": f"The ID '{doc_id}' already exists. What would you like to do?",
+            "existing_text": LOCAL_DATABASE[doc_id]
+        }
+    
+    # Handle user choices
+    if mode == "append":
+        # Combines the old text with the new text using a newline break
+        LOCAL_DATABASE[doc_id] = LOCAL_DATABASE[doc_id] + "\n" + text_content
+        return {"status": "success", "message": f"Successfully added new information to '{doc_id}'."}
+    
+    else:
+        # Default behavior: overwrite or standard brand new entry
+        LOCAL_DATABASE[doc_id] = text_content
+        return {"status": "success", "message": f"Document '{doc_id}' stored safely."}
+
 @app.post("/ask")
 def ask_ai(question: str):
+    """Retrieves text context from memory and queries Gemini 2.5 Flash."""
     try:
         # Build context from your local database items
         if LOCAL_DATABASE:
@@ -66,7 +92,7 @@ def ask_ai(question: str):
         }
     except Exception as e:
         error_msg = str(e)
-        # Check if the error is Google's 503 traffic spike
+        # Catch Google's 503 high-demand traffic spikes gracefully
         if "503" in error_msg or "UNAVAILABLE" in error_msg:
             friendly_answer = "⚠️ Google's AI servers are currently experiencing a temporary high-demand traffic spike. Please wait 10 seconds and click 'Query App' again!"
         else:

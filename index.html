@@ -26,7 +26,6 @@
 <div class="container">
     <h1>🧠 Vibe Coder AI App</h1>
     
-    <!-- Section 1: Add Document -->
     <div class="section">
         <h3>1. Add Information to Vector DB</h3>
         <label>Document Title / ID</label>
@@ -38,17 +37,14 @@
         <button onclick="clearDB()" style="background-color: #dc3545; color: white; margin-bottom: 0;">Clear Database</button>
     </div>
 
-    <!-- Section 2: Ask Question -->
     <div class="section" style="border: none; margin-bottom: 0; padding-bottom: 0;">
         <h3>2. Ask AI Based on Knowledge</h3>
         <label>Your Question</label>
         <input type="text" id="question" placeholder="Ask something about your stored info...">
         <button onclick="askAI()" style="background: #10b981;">Query App</button>
         
-        <!-- Clean Text Generation Output Area -->
         <div id="askOutput" class="output"></div>
         
-        <!-- Collapsible Dropdown Context Component -->
         <details id="contextDropdown" style="display: none;">
             <summary>🔍 View Retrieved Database Context (Click to expand)</summary>
             <div id="context-display" class="context-box"></div>
@@ -59,7 +55,7 @@
 <script>
     const BACKEND_URL = "https://rag-retrieval-augmented-generation.onrender.com";
 
-    async function addDocument() {
+    async function addDocument(mode = "check") {
         const id = document.getElementById('docId').value;
         const text = document.getElementById('docText').value;
         const outDiv = document.getElementById('addOutput');
@@ -67,12 +63,27 @@
         if(!id || !text) return alert("Please fill in both fields");
 
         outDiv.style.display = "block";
-        outDiv.innerText = "Saving...";
+        outDiv.innerText = "Processing...";
 
         try {
-            const res = await fetch(`${BACKEND_URL}/add?doc_id=${encodeURIComponent(id)}&text_content=${encodeURIComponent(text)}`, { method: 'POST' });
+            const res = await fetch(`${BACKEND_URL}/add?doc_id=${encodeURIComponent(id)}&text_content=${encodeURIComponent(text)}&mode=${mode}`, { method: 'POST' });
             const data = await res.json();
-            outDiv.innerText = data.message || JSON.stringify(data);
+            
+            if (data.status === "exists_warning") {
+                const choice = prompt(
+                    `${data.message}\n\nType '1' to OVERWRITE the existing data.\nType '2' to APPEND (add to) the existing data.\nType '3' or click Cancel to stop.`
+                );
+
+                if (choice === "1") {
+                    addDocument("overwrite");
+                } else if (choice === "2") {
+                    addDocument("append");
+                } else {
+                    outDiv.innerText = "Operation canceled. No changes were made.";
+                }
+            } else {
+                outDiv.innerText = data.message || JSON.stringify(data);
+            }
         } catch (err) {
             outDiv.innerText = "Error linking to backend server. Make sure your Python server is running.";
         }
@@ -87,7 +98,7 @@
         if(!q) return alert("Please type a question");
 
         outDiv.style.display = "block";
-        dropdown.style.display = "none"; // Hide old container during fetch
+        dropdown.style.display = "none"; 
         outDiv.innerText = "Searching Vector DB & querying Gemini...";
 
         try {
@@ -100,10 +111,7 @@
                 const context = data.retrieved_context || "No context found.";
                 const answer = data.answer || "No answer generated.";
                 
-                // 1. Populate the main text panel with only the smart reply
                 outDiv.innerText = answer;
-                
-                // 2. Load context data silently into the dropdown menu component
                 contextDiv.innerText = context;
                 dropdown.style.display = "block"; 
             }
@@ -119,7 +127,6 @@
             const data = await response.json();
             alert(data.message);
             
-            // Clean interface readouts
             document.getElementById('askOutput').style.display = "none";
             document.getElementById('contextDropdown').style.display = "none";
             document.getElementById('addOutput').style.display = "none";
