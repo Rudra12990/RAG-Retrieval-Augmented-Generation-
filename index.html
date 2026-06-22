@@ -38,3 +38,152 @@
         .modal-overlay.active .modal-box { transform: scale(1); }
         .modal-box h4 { margin-top: 0; color: #1a1a1a; font-size: 18px; }
         .modal-box p { color: #64748b; font-size: 14px; margin-bottom: 20px; line-height: 1.5; }
+        .modal-actions { display: flex; gap: 10px; justify-content: center; }
+        .modal-actions button { margin-bottom: 0; width: auto; flex: 1; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>🧠 Vibe Coder AI App</h1>
+    
+    <div class="section">
+        <h3>1. Add Information to Vector DB</h3>
+        <label>Document Title / ID</label>
+        <input type="text" id="docId" placeholder="e.g., standard-operating-procedure">
+        <label>Document Text Content</label>
+        <textarea id="docText" rows="3" placeholder="Paste the text or information you want the AI to remember here..."></textarea>
+        <button onclick="addDocument()">Save to Vector Database</button>
+        <div id="addOutput" class="output" style="border-left-color: #0070f3;"></div>
+        <button onclick="clearDB()" class="btn-danger" style="margin-bottom: 0;">Clear Database</button>
+    </div>
+
+    <div class="section" style="border: none; margin-bottom: 0; padding-bottom: 0;">
+        <h3>2. Ask AI Based on Knowledge</h3>
+        <label>Your Question</label>
+        <input type="text" id="question" placeholder="Ask something about your stored info...">
+        <button onclick="askAI()" class="btn-success">Query App</button>
+        
+        <div id="askOutput" class="output"></div>
+        
+        <details id="contextDropdown" style="display: none;">
+            <summary>🔍 View Retrieved Database Context (Click to expand)</summary>
+            <div id="context-display" class="context-box"></div>
+        </details>
+    </div>
+</div>
+
+<div id="conflictModal" class="modal-overlay">
+    <div class="modal-box">
+        <h4 id="modalTitle">⚠️ ID Conflict Detected</h4>
+        <p id="modalMessage">This ID already exists in your database memory. What would you like to do?</p>
+        <div class="modal-actions">
+            <button onclick="resolveConflict('overwrite')" class="btn-danger">Overwrite</button>
+            <button onclick="resolveConflict('append')" class="btn-success">Append Data</button>
+            <button onclick="closeModal()" class="btn-secondary">Cancel</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    const BACKEND_URL = "https://rag-retrieval-augmented-generation.onrender.com";
+    
+    // Store temporarily for modal callbacks
+    let activeId = "";
+    let activeText = "";
+
+    async function addDocument() {
+        activeId = document.getElementById('docId').value;
+        activeText = document.getElementById('docText').value;
+        const outDiv = document.getElementById('addOutput');
+        
+        if(!activeId || !activeText) return alert("Please fill in both fields");
+
+        outDiv.style.display = "block";
+        outDiv.innerText = "Processing...";
+
+        try {
+            const res = await fetch(`${BACKEND_URL}/add?doc_id=${encodeURIComponent(activeId)}&text_content=${encodeURIComponent(activeText)}&mode=check`, { method: 'POST' });
+            const data = await res.json();
+            
+            if (data.status === "exists_warning") {
+                // Open the custom beautifully styled popup container instead of prompt()
+                document.getElementById('modalMessage').innerText = `The ID "${activeId}" already exists in your knowledge base. Choose an option below:`;
+                document.getElementById('conflictModal').classList.add('active');
+            } else {
+                outDiv.style.display = "block";
+                outDiv.innerText = data.message || JSON.stringify(data);
+            }
+        } catch (err) {
+            outDiv.innerText = "Error linking to backend server. Make sure your Python server is running.";
+        }
+    }
+
+    // Handles the explicit button choices right from the custom popup window
+    async function resolveConflict(chosenMode) {
+        closeModal();
+        const outDiv = document.getElementById('addOutput');
+        outDiv.innerText = "Executing choice...";
+
+        try {
+            const res = await fetch(`${BACKEND_URL}/add?doc_id=${encodeURIComponent(activeId)}&text_content=${encodeURIComponent(activeText)}&mode=${chosenMode}`, { method: 'POST' });
+            const data = await res.json();
+            outDiv.innerText = data.message || JSON.stringify(data);
+        } catch (err) {
+            outDiv.innerText = "Failed to update record on live server.";
+        }
+    }
+
+    function closeModal() {
+        document.getElementById('conflictModal').classList.remove('active');
+        document.getElementById('addOutput').innerText = "Operation canceled. No changes were made.";
+    }
+
+    async function askAI() {
+        const q = document.getElementById('question').value;
+        const outDiv = document.getElementById('askOutput');
+        const dropdown = document.getElementById('contextDropdown');
+        const contextDiv = document.getElementById('context-display');
+        
+        if(!q) return alert("Please type a question");
+
+        outDiv.style.display = "block";
+        dropdown.style.display = "none"; 
+        outDiv.innerText = "Searching Vector DB & querying Gemini...";
+
+        try {
+            const res = await fetch(`${BACKEND_URL}/ask?question=${encodeURIComponent(q)}`, { method: 'POST' });
+            const data = await res.json();
+            
+            if (data.error) {
+                outDiv.innerText = data.error;
+            } else {
+                const context = data.retrieved_context || "No context found.";
+                const answer = data.answer || "No answer generated.";
+                
+                outDiv.innerText = answer;
+                contextDiv.innerText = context;
+                dropdown.style.display = "block"; 
+            }
+        } catch (err) {
+            outDiv.innerText = "Error linking to backend server.";
+        }
+    }
+
+    async function clearDB() {
+        if(!confirm("Are you sure you want to clear your local database memory?")) return;
+        try {
+            const response = await fetch(`${BACKEND_URL}/clear`, { method: 'POST' });
+            const data = await response.json();
+            alert(data.message);
+            
+            document.getElementById('askOutput').style.display = "none";
+            document.getElementById('contextDropdown').style.display = "none";
+            document.getElementById('addOutput').style.display = "none";
+        } catch (err) {
+            alert("Failed to wipe database environment.");
+        }
+    }
+</script>
+</body>
+</html>
