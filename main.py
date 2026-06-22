@@ -1,13 +1,14 @@
 import os
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from google import genai  # Modern up-to-date Google SDK
+from google import genai
 from dotenv import load_dotenv
+from supabase import create_client, Client
 
-# 🚀 Securely load your local .env file setup
+# Securely load environment variables
 load_dotenv()
 
-app = FastAPI(title="Vibe Coder AI Knowledge Base")
+app = FastAPI(title="Vibe Coder AI Knowledge Base with Cloud Persistence")
 
 # Enable smooth frontend interaction across different domains
 app.add_middleware(
@@ -18,69 +19,88 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Initialize the modern client by pulling the key from the loaded environment setup
+# 💾 Initialize Supabase Cloud Database Client
+SUPABASE_URL = os.environ.get("SUPABASE_URL")
+SUPABASE_KEY = os.environ.get("SUPABASE_KEY")
+
+if not SUPABASE_URL or not SUPABASE_KEY:
+    print("⚠️ Supabase credentials missing from environment setup!")
+supabase_client: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
+
+# 🚀 Initialize Gemini AI Engine Client
 try:
     client = genai.Client(api_key=os.environ.get("GEMINI_API_KEY"))
 except Exception as e:
-    print(f"⚠️ Initialization warning: {e}")
+    print(f"⚠️ Gemini initialization warning: {e}")
 
-# Secure local in-memory database dictionary
-LOCAL_DATABASE = {}
 
 @app.get("/")
 def read_root():
-    return {"status": "Online", "message": "Demo backend running successfully!"}
+    return {"status": "Online", "message": "Persistent cloud backend running successfully!"}
+
 
 @app.post("/clear")
 def clear_database():
-    """Wipes the local in-memory database completely clean."""
-    LOCAL_DATABASE.clear()
-    return {"status": "success", "message": "Local database wiped completely clean."}
+    """Wipes the database table completely clean by deleting all matching records."""
+    try:
+        # Deletes all entries where id is not null (everything)
+        supabase_client.table("documents").delete().neq("id", "none").execute()
+        return {"status": "success", "message": "Cloud database wiped completely clean."}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Database wipe failed: {str(e)}")
+
 
 @app.post("/add")
 def add_to_database(doc_id: str, text_content: str, mode: str = "check"):
     """
-    Stores text documents inside our local memory database.
-    Modes: 
-      - 'check': Warns if the ID exists.
-      - 'overwrite': Replaces the old data.
-      - 'append': Combines old and new data together.
+    Stores and manages documents inside Supabase Cloud Storage.
+    Modes: 'check', 'overwrite', 'append'
     """
     if not doc_id or not text_content:
-        raise HTTPException(status_code=400, detail="Missing data")
+        raise HTTPException(status_code=400, detail="Missing required parameters")
     
-    # Check if ID already exists and user hasn't made a decision yet
-    if doc_id in LOCAL_DATABASE and mode == "check":
-        return {
-            "status": "exists_warning", 
-            "message": f"The ID '{doc_id}' already exists. What would you like to do?",
-            "existing_text": LOCAL_DATABASE[doc_id]
-        }
-    
-    # Handle user choices
-    if mode == "append":
-        # Combines the old text with the new text using a newline break
-        LOCAL_DATABASE[doc_id] = LOCAL_DATABASE[doc_id] + "\n" + text_content
-        return {"status": "success", "message": f"Successfully added new information to '{doc_id}'."}
-    
-    else:
-        # Default behavior: overwrite or standard brand new entry
-        LOCAL_DATABASE[doc_id] = text_content
-        return {"status": "success", "message": f"Document '{doc_id}' stored safely."}
+    try:
+        # Check if the document ID already exists in the cloud table
+        existing_record = supabase_client.table("documents").select("*").eq("id", doc_id).execute()
+        
+        if existing_record.data and mode == "check":
+            return {
+                "status": "exists_warning", 
+                "message": f"The ID '{doc_id}' already exists in the cloud table. What would you like to do?",
+                "existing_text": existing_record.data[0]["content"]
+            }
+        
+        if mode == "append" and existing_record.data:
+            # Combine old text with new text using a newline break
+            updated_text = existing_record.data[0]["content"] + "\n" + text_content
+            supabase_client.table("documents").update({"content": updated_text}).eq("id", doc_id).execute()
+            return {"status": "success", "message": f"Successfully appended data to record '{doc_id}'."}
+        
+        else:
+            # Overwrite or create brand new entry using upsert
+            # Upsert will automatically insert if new, or overwrite if id matches
+            supabase_client.table("documents").upsert({"id": doc_id, "content": text_content}).execute()
+            return {"status": "success", "message": f"Document '{doc_id}' stored safely in cloud storage."}
+            
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Cloud write failure: {str(e)}")
+
 
 @app.post("/ask")
 def ask_ai(question: str):
-    """Retrieves text context from memory and queries Gemini 2.5 Flash."""
+    """Retrieves all combined text context from Supabase and queries Gemini 2.5 Flash."""
     try:
-        # Build context from your local database items
-        if LOCAL_DATABASE:
-            context = " ".join(LOCAL_DATABASE.values())
+        # Pull all documents from our cloud table
+        records = supabase_client.table("documents").select("content").execute()
+        
+        if records.data:
+            # Join all content fields together to build context
+            context = " ".join([row["content"] for row in records.data])
         else:
             context = "No custom documents uploaded yet."
 
         prompt = f"Context: {context}\n\nQuestion: {question}"
         
-        # Call the modern flash model endpoint securely
         response = client.models.generate_content(
             model='gemini-2.5-flash',
             contents=prompt,
@@ -92,9 +112,8 @@ def ask_ai(question: str):
         }
     except Exception as e:
         error_msg = str(e)
-        # Catch Google's 503 high-demand traffic spikes gracefully
         if "503" in error_msg or "UNAVAILABLE" in error_msg:
-            friendly_answer = "⚠️ Google's AI servers are currently experiencing a temporary high-demand traffic spike. Please wait 10 seconds and click 'Query App' again!"
+            friendly_answer = "⚠️ Google's AI servers are experiencing a temporary traffic spike. Please wait 10 seconds and click 'Query App' again!"
         else:
             friendly_answer = f"Gemini Query Failed: {error_msg}"
 
