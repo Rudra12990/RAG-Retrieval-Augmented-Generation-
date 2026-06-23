@@ -9,20 +9,20 @@ from google.genai import types
 from google.genai.errors import APIError
 from dotenv import load_dotenv
 
-# 🟢 Fixed SlowAPI imports
+# SlowAPI imports
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 
-# 1. Initialize environment variables from hidden local .env state
+#  Initialize environment variables from hidden local .env state
 load_dotenv()
 
 app = FastAPI(title="Vibe Coder Secure AI Workspace - Final Production Build")
 
-# 2. Setup Open-Source DDOS Traffic Limiter (Tracks incoming connection IPs)
+#  Setup Open-Source DDOS Traffic Limiter 
 limiter = Limiter(key_func=get_remote_address)
 app.state.limiter = limiter
-app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler) # 🟢 Fixed with underscore
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler) 
 
 # 3. Enable Secure Cross-Origin Communications (CORS Gateway)
 app.add_middleware(
@@ -93,7 +93,7 @@ def get_embedding(text: str) -> list:
     for attempt in range(retries):
         try:
             response = client.models.embed_content(
-                model="gemini-embedding-001",  # Core stable 3072-dimension engine
+                model="gemini-embedding-001",  
                 contents=text
             )
             return response.embeddings[0].values
@@ -165,7 +165,7 @@ def add_to_database(doc_id: str, text_content: str, mode: str = "check", user_da
 
 
 @app.post("/ask")
-@limiter.limit("5/minute")  # 🛡️ DEFENSE 3: Local Server Traffic Rate Limiter
+@limiter.limit("5/minute")  #  Local Server Traffic Rate Limiter
 def ask_ai(request: Request, question: str, user_data: dict = Depends(verify_and_get_user)):
     """Queries Gemini utilizing systemic guardrails alongside pgvector similarity matches."""
     # 1. Transform user input question to a vector
@@ -188,7 +188,7 @@ def ask_ai(request: Request, question: str, user_data: dict = Depends(verify_and
         context_chunks = [row["content"] for row in records] if isinstance(records, list) else []
         context = " \n---\n ".join(context_chunks) if context_chunks else "No structurally relative matches indexed."
         
-        # 🛡️ DEFENSE 2: Structured Guardrails via System Instructions
+        #  Structured Guardrails via System Instructions
         system_instruction = (
             "You are a secure corporate data analyzer. Your task is strictly to answer questions "
             "based on the provided context data block. You must follow these safety boundaries:\n"
