@@ -106,12 +106,16 @@ def add_to_database(doc_id: str, text_content: str, mode: str = "check"):
             
             else:
                 # Default behaviour: Standard Upsert insertion path
-                # Sets resolution strategy to override conflicts natively
                 upsert_headers = headers.copy()
                 upsert_headers["Resolution"] = "merge"
                 
                 payload = {"id": doc_id, "content": text_content}
-                http_client.post(upsert_url, json=payload, headers=upsert_headers)
+                
+                # Capture the response object from the database call
+                res = http_client.post(upsert_url, json=payload, headers=upsert_headers)
+                print(f"📡 Supabase API Raw Response Status: {res.status_code}")
+                print(f"📡 Supabase API Raw Response Body: {res.text}")
+                
                 return {"status": "success", "message": f"Document '{doc_id}' stored safely in cloud storage."}
                 
     except Exception as e:
