@@ -76,13 +76,12 @@ def verify_and_get_user(authorization: str = Header(None)):
         raise HTTPException(status_code=503, detail="Authentication server temporarily unreachable.")
 
 def get_embedding(text: str) -> list:
-    """Generates a standard 1536-dimension text embedding vector via Gemini."""
+    """Generates a modern 768-dimension text embedding vector via Gemini 005."""
     try:
         response = client.models.embed_content(
-            model="text-embedding-004",  # Native, super-fast embedding model
+            model="text-embedding-005",  # 🟢 Fixed model identity mapping string
             contents=text
         )
-        # Extract the vector coordinate floating point array
         return response.embeddings[0].values
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Embedding compilation failed: {str(e)}")
