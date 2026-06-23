@@ -38,13 +38,33 @@ except Exception as e:
 
 
 def verify_and_get_user(authorization: str = Header(None)):
+    """
+    🛡️ DEFENSE 1 (HARDENED): Live Identity Verification Gateway
+    Directly checks the token signature with the Supabase Auth system.
+    This guarantees 100% accurate session tracking without key mismatches.
+    """
     if not authorization or not authorization.startswith("Bearer "):
-        raise HTTPException(status_code=401, detail="Missing or invalid credentials.")
+        raise HTTPException(status_code=401, detail="Missing or invalid authentication credentials.")
+    
     token = authorization.split(" ")[1]
+    
+    # Package headers for a validation handshake directly with Supabase Auth
+    validation_headers = {
+        "apikey": SUPABASE_KEY,
+        "Authorization": authorization
+    }
+    user_endpoint = f"{SUPABASE_URL}/auth/v1/user"
+    
     try:
-        payload = jwt.decode(token, SUPABASE_KEY, algorithms=["HS256"], options={"verify_aud": False})
+        with httpx.Client() as http_client:
+            response = http_client.get(user_endpoint, headers=validation_headers)
+            
+        if response.status_code != 200:
+            raise HTTPException(status_code=401, detail="Session expired or invalid token signature.")
+            
+        user_info = response.json()
         return {
-            "user_id": payload.get("sub"),
+            "user_id": user_info.get("id"), # Explicit user UUID returned from auth source
             "headers": {
                 "apikey": SUPABASE_KEY,
                 "Authorization": authorization,
@@ -52,9 +72,8 @@ def verify_and_get_user(authorization: str = Header(None)):
                 "Prefer": "return=representation"
             }
         }
-    except jwt.PyJWTError:
-        raise HTTPException(status_code=401, detail="Authentication failed.")
-
+    except httpx.RequestError:
+        raise HTTPException(status_code=503, detail="Authentication server temporarily unreachable.")
 
 def get_embedding(text: str) -> list:
     """Generates a standard 1536-dimension text embedding vector via Gemini."""
