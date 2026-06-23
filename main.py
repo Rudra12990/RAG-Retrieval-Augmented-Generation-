@@ -1,5 +1,5 @@
 import os
-import httpx  # Standard high-performance HTTP client library
+import httpx  
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from google import genai
@@ -36,13 +36,13 @@ except Exception as e:
 
 
 def get_auth_headers():
-    """Generates standard explicit headers for direct Supabase REST authentication."""
+    """Generates explicit headers for standard Supabase REST operations."""
     return {
         "apikey": SUPABASE_KEY,
         "Authorization": f"Bearer {SUPABASE_KEY}",
-        "Content-Type": "application/json",
-        "Prefer": "return=representation"  # Returns payload data on write actions
-        }
+        "Content-Type": "application/json",  # 👈 Fixed: Turned into an explicit string token literal
+        "Prefer": "return=representation"    # 👈 Tells Supabase to return and verify the row payload data
+    }
 
 
 @app.get("/")
@@ -53,7 +53,6 @@ def read_root():
 @app.post("/clear")
 def clear_database():
     """Wipes the database table completely clean via a direct REST DELETE path request."""
-    # Target path: targets table and checks where ID is not null
     target_url = f"{SUPABASE_URL}/rest/v1/documents?id=neq.none"
     
     try:
@@ -72,12 +71,11 @@ def clear_database():
 def add_to_database(doc_id: str, text_content: str, mode: str = "check"):
     """
     Stores and manages documents inside Supabase via explicit HTTP REST commands.
-    Bypasses SDK translation layers entirely to guarantee route path generation accuracy.
     """
     if not doc_id or not text_content:
         raise HTTPException(status_code=400, detail="Missing required parameters")
     
-    # Direct explicit endpoint table path query string
+    # Correctly build absolute URLs for standard table targeting
     select_url = f"{SUPABASE_URL}/rest/v1/documents?id=eq.{encode_query_param(doc_id)}"
     upsert_url = f"{SUPABASE_URL}/rest/v1/documents"
     
@@ -101,24 +99,30 @@ def add_to_database(doc_id: str, text_content: str, mode: str = "check"):
             if mode == "append" and existing_data:
                 updated_text = existing_data[0]["content"] + "\n" + text_content
                 patch_url = f"{SUPABASE_URL}/rest/v1/documents?id=eq.{encode_query_param(doc_id)}"
-                http_client.patch(patch_url, json={"content": updated_text}, headers=headers)
+                
+                res = http_client.patch(patch_url, json={"content": updated_text}, headers=headers)
+                if res.status_code not in [200, 201, 204]:
+                    raise Exception(f"Append failure: {res.text}")
+                    
                 return {"status": "success", "message": f"Successfully appended data to record '{doc_id}'."}
             
             else:
-                # Default behaviour: Standard Upsert insertion path
+                # 4. Standard Upsert / Insert Path
+                # Use explicit PostgREST Upsert header configuration rules
                 upsert_headers = headers.copy()
-                upsert_headers["Resolution"] = "merge"
+                upsert_headers["Prefer"] = "return=representation,resolution=merge-duplicates"
                 
                 payload = {"id": doc_id, "content": text_content}
-                
-                # Capture the response object from the database call
                 res = http_client.post(upsert_url, json=payload, headers=upsert_headers)
-                print(f"📡 Supabase API Raw Response Status: {res.status_code}")
-                print(f"📡 Supabase API Raw Response Body: {res.text}")
+                
+                # Check if the database rejected the write operation
+                if res.status_code not in [200, 201, 204]:
+                    raise Exception(f"Database write rejected with status {res.status_code}: {res.text}")
                 
                 return {"status": "success", "message": f"Document '{doc_id}' stored safely in cloud storage."}
                 
     except Exception as e:
+        # Pass the real database error code back to your frontend screen to see exactly what is blocking it
         raise HTTPException(status_code=500, detail=f"Cloud write failure: {str(e)}")
 
 
@@ -159,6 +163,7 @@ def ask_ai(question: str):
             "retrieved_context": "System Warning",
             "answer": friendly_answer
         }
+
 
 def encode_query_param(val: str) -> str:
     """Helper method to format request query text values safely."""
