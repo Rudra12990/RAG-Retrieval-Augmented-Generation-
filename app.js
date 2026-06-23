@@ -3,8 +3,9 @@ const SUPABASE_PROJECT_URL = "https://vizpndniifwpwmqnjvvi.supabase.co";
 const SUPABASE_ANON_PUBLIC_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZpenBuZG5paWZ3cHdtcW5qdnZpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIxNTAyMjYsImV4cCI6MjA5NzcyNjIyNn0.FQ8WGVVVbA-vbH8pc6nkj1tHc_3fbfFvmOWc4Nn8WeY";
 const API_URL = "https://rag-retrieval-augmented-generation.onrender.com";
 
-// 🚀 Initialize browser-side Supabase client engine
-const supabase = supabase.createClient(SUPABASE_PROJECT_URL, SUPABASE_ANON_PUBLIC_KEY);
+
+// 🚀 Initialize browser-side Supabase client engine (FIXED variable collision name)
+const supabaseClient = supabase.createClient(SUPABASE_PROJECT_URL, SUPABASE_ANON_PUBLIC_KEY);
 
 // State monitoring parameters
 let userSessionToken = null;
@@ -56,7 +57,7 @@ function getAuthFetchHeaders() {
 }
 
 // 🔄 Monitor Authentication State Changes Across Sessions
-supabase.auth.onAuthStateChange((event, session) => {
+supabaseClient.auth.onAuthStateChange((event, session) => {
     if (session) {
         userSessionToken = session.access_token;
         userDisplayEmail.innerText = session.user.email;
@@ -76,24 +77,35 @@ btnPrimaryAuth.addEventListener("click", async () => {
     const password = authPassword.value.trim();
 
     if (!email || !password) {
-        showStatus(authStatus, "Please enter email and password criteria.", "error");
+        showStatus(authStatus, "Please enter email and password.", "error");
         return;
     }
 
     btnPrimaryAuth.disabled = true;
-    showStatus(authStatus, "Authenticating secure handshake...", "info");
+    showStatus(authStatus, "Processing secure handshake...", "info");
 
     try {
         if (currentAuthMode === "login") {
-            const { error } = await supabase.auth.signInWithPassword({ email, password });
-            if (error) throw error;
+            const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+            if (error) {
+                showStatus(authStatus, `Login Failed: ${error.message}`, "error");
+                return;
+            }
         } else {
-            const { error } = await supabase.auth.signUp({ email, password });
-            if (error) throw error;
-            showStatus(authStatus, "Registration complete! Check your email for validation link.", "success");
+            const { data, error } = await supabaseClient.auth.signUp({ email, password });
+            if (error) {
+                showStatus(authStatus, `Registration Failed: ${error.message}`, "error");
+                return;
+            }
+            if (data.user && data.session === null) {
+                showStatus(authStatus, "Account created! 📧 Check your inbox for a verification link before logging in.", "success");
+                authEmail.value = "";
+                authPassword.value = "";
+                return;
+            }
         }
     } catch (err) {
-        showStatus(authStatus, err.message, "error");
+        showStatus(authStatus, `System Error: ${err.message}`, "error");
     } finally {
         btnPrimaryAuth.disabled = false;
     }
@@ -116,7 +128,7 @@ btnToggleAuthMode.addEventListener("click", () => {
 });
 
 // Log Out Action
-btnLogout.addEventListener("click", () => supabase.auth.signOut());
+btnLogout.addEventListener("click", () => supabaseClient.auth.signOut());
 
 // 🔄 Sync Vector Items list view from Backend Engine
 async function fetchWorkspaceIndexes() {
@@ -235,7 +247,7 @@ async function runQuery() {
     }
 }
 
-async function clearStorage() {
+async function clearIntervals() { 
     if (!confirm("Wipe your isolated storage layer database index completely clean?")) return;
     try {
         const response = await fetch(`${API_URL}/clear`, { 
@@ -264,7 +276,7 @@ themeToggleBtn.addEventListener("click", () => {
 // Listener Setup
 btnSave.addEventListener("click", () => saveDocument("check"));
 btnQuery.addEventListener("click", runQuery);
-btnClear.addEventListener("click", clearStorage);
+btnClear.addEventListener("click", clearIntervals);
 modalCancel.addEventListener("click", () => { conflictModal.classList.remove("active"); });
 modalAppend.addEventListener("click", () => saveDocument("append"));
 modalOverwrite.addEventListener("click", () => saveDocument("overwrite"));
