@@ -1,3 +1,27 @@
+# Secure Multi-Tenant Semantic RAG Platform
+
+An enterprise-grade, security-hardened Retrieval-Augmented Generation (RAG) platform. This system implements true semantic vector space mapping, robust multi-tenant data isolation, client-side caching state protections, and automated API resilience mechanisms.
+
+## 🏗️ Architecture Overview
+
+The system transitions from traditional keyword-matching to a high-density, multi-user semantic search grid utilizing state-of-the-art vector embeddings and explicit security middleware verification thresholds.
+
+[ Vanilla Web Client ] ──(JWT Session Token)──> [ FastAPI Security Gateway ]
+│
+
+
+┌─────────────────────────────────────────────┴─────────────────────────────────────────────┐
+▼                                              ▼
+🛡️ Defense 1: Auth Validation               🧠 Semantic Pipeline                          ⚡ Defense 3: Rate Limiter
+Handshakes directly with Supabase           Converts inputs to 3072-dim vectors            Enforces Traffic Throttling
+/auth/v1/user API to isolate IDs.         via gemini-embedding-001.                   via SlowAPI (5 req/min max).
+│                                             │                                             │
+▼                                             ▼                                             ▼
+[ Supabase RLS Row Isolation ]             [ pgvector Similarity RPC Match ]             [ Exponential Backoff Engine ]
+
+
+---
+
 ## 🛡️ Core Security Matrix & Defense Implementations
 
 ### 1. Cryptographic Identity Verification Gateway
@@ -24,7 +48,7 @@ To handle Google Cloud AI Studio Free Tier constraints (20 requests per minute),
 
 ## 🛠️ Technical Stack Specifications
 
-* **Frontend Environment:** Vanilla HTML5, CSS3 Variables, Asynchronous ES6+ JavaScript Framework APIs.
+* **Frontend Environment:** HTML5, CSS3, Asynchronous ES6+ JavaScript.
 * **Backend Framework:** FastAPI (Python 3.10+) running over an Asynchronous Uvicorn Web Server Cluster.
 * **Database & Auth Gateway:** Supabase Cloud Infrastructure utilizing Postgres, Row Level Security, and the `pgvector` relational extension.
 * **AI Model Engine Ecosystem:**
