@@ -8,10 +8,11 @@ from google import genai
 from google.genai import types
 from google.genai.errors import APIError
 from dotenv import load_dotenv
-from slowapi import Limiter
+
+# 🟢 Fixed SlowAPI imports
+from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
-from slowapi._rate_limit_exceeded_handler import rate_limit_exceeded_handler
 
 # 1. Initialize environment variables from hidden local .env state
 load_dotenv()
