@@ -4,21 +4,16 @@ An enterprise-grade, security-hardened Retrieval-Augmented Generation (RAG) plat
 
 ## 🏗️ Architecture Overview
 
-The system transitions from traditional keyword-matching to a high-density, multi-user semantic search grid utilizing state-of-the-art vector embeddings and explicit security middleware verification thresholds.
+The system transitions from traditional keyword-matching to a high-density, multi-user semantic search grid. The diagram below details the structural data flow across the security and processing pipeline:
 
 [ Vanilla Web Client ] ──(JWT Session Token)──> [ FastAPI Security Gateway ]
 │
 
-
-┌─────────────────────────────────────────────┴─────────────────────────────────────────────┐
-▼                                              ▼
-🛡️ Defense 1: Auth Validation               🧠 Semantic Pipeline                          ⚡ Defense 3: Rate Limiter
-Handshakes directly with Supabase           Converts inputs to 3072-dim vectors            Enforces Traffic Throttling
-/auth/v1/user API to isolate IDs.         via gemini-embedding-001.                   via SlowAPI (5 req/min max).
-│                                             │                                             │
-▼                                             ▼                                             ▼
-[ Supabase RLS Row Isolation ]             [ pgvector Similarity RPC Match ]             [ Exponential Backoff Engine ]
-
+| 🛡️ 1. Auth Validation Gateway | 🧠 2. Semantic Vector Pipeline | ⚡ 3. Traffic Rate Limiter |
+| :--- | :--- | :--- |
+| **Action:** Handshakes directly with Supabase API (`/auth/v1/user`) to verify incoming session tokens. | **Action:** Converts dynamic user content strings into dense 3072-dimension numerical vector coordinate arrays. | **Action:** Monitors incoming connection client IP addresses to enforce hard system request thresholds. |
+| **Engine:** FastAPI Identity Middleware | **Engine:** `gemini-embedding-001` | **Engine:** SlowAPI Engine Framework |
+| **Downstream Strategy:** Enforces database row protection via **Supabase RLS Isolation**. | **Downstream Strategy:** Executes strict spatial cosine math via **`pgvector` RPC Matrix Matches**. | **Downstream Strategy:** Mitigates API exhaustion blocks using an **Exponential Backoff Engine**. |
 
 ---
 
