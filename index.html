@@ -7,13 +7,42 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Markdown Compiler Parser Engine -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.0/marked.min.js"></script>
+    <!-- Official Supabase Browser Library Client Engine Module CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-    <div class="app-layout">
+    <!-- 🔒 Gatekeeper Authentication Modal Screen Overlay -->
+    <div id="auth-gatekeeper" class="auth-overlay">
+        <div class="auth-card">
+            <h2 id="auth-title">Welcome to Workspace Suite</h2>
+            <p id="auth-subtitle">Sign in to your private encrypted cloud RAG account</p>
+            
+            <div class="input-group">
+                <label for="auth-email">Email Address</label>
+                <input type="text" id="auth-email" placeholder="you@example.com">
+            </div>
+            <div class="input-group">
+                <label for="auth-password">Password</label>
+                <input type="password" id="auth-password" placeholder="••••••••">
+            </div>
+
+            <div class="auth-actions-layout">
+                <button id="btn-primary-auth">Log In</button>
+                <button id="btn-toggle-auth-mode" class="btn-link">Need an account? Sign Up</button>
+            </div>
+            <div id="auth-status" class="status-box"></div>
+        </div>
+    </div>
+
+    <!-- 🖥️ Core Dashboard Layout (Hidden until authenticated) -->
+    <div class="app-layout" id="main-dashboard-layout" style="display: none;">
+        <!-- 🧭 Sidebar Explorer Section -->
         <aside class="sidebar">
+            <!-- 🌗 Theme Switch Mode Header -->
             <div class="theme-switch-wrapper">
                 <button id="theme-toggle" class="theme-toggle-btn">🌓 Switch Theme</button>
             </div>
@@ -22,16 +51,23 @@
             <ul id="doc-list-target" class="doc-list">
                 <li style="font-size: 0.8rem; color: var(--text-secondary); text-align: center; padding-top: 1rem;">Loading workspace elements...</li>
             </ul>
+
+            <div style="margin-top: auto; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 1rem;">
+                <span id="user-display-email" style="font-size:0.75rem; color: var(--text-secondary); display:block; margin-bottom:0.5rem; overflow:hidden; text-overflow:ellipsis;">user@domain.com</span>
+                <button id="btn-logout" class="btn-danger" style="width:100%; padding:0.5rem; font-size:0.8rem;">Log Out</button>
+            </div>
         </aside>
 
+        <!-- Core Main Content Screen -->
         <main class="main-content">
             <div class="container">
                 <header>
                     <h1>Vibe Coder AI Workspace</h1>
-                    <p>Production Cloud RAG Suite Layer</p>
+                    <p>Secure Isolated Multi-User Production Pipeline</p>
                 </header>
 
                 <div class="grid">
+                    <!-- Manage Memory -->
                     <div class="panel">
                         <div class="panel-title">💾 Manage Context Vectors</div>
                         <div class="input-group">
@@ -46,6 +82,7 @@
                         <div id="save-status" class="status-box"></div>
                     </div>
 
+                    <!-- Query Space -->
                     <div class="panel">
                         <div class="panel-title">🧠 Query Engine</div>
                         <div class="input-group">
@@ -56,6 +93,7 @@
                         <div id="query-status" class="status-box"></div>
                     </div>
 
+                    <!-- Outputs -->
                     <div class="panel full-width">
                         <div class="panel-title">✨ Processed Inference Output</div>
                         <div id="ai-output" class="ai-response">System awaiting processing commands...</div>
@@ -64,7 +102,7 @@
                             <div id="retrieved-context" class="details-content">No queries compiled yet.</div>
                         </details>
                         <div style="display: flex; justify-content: flex-end; margin-top: 0.5rem;">
-                            <button id="btn-clear" class="btn-danger" style="padding: 0.5rem 1rem; font-size: 0.8rem;">Wipe Cloud Storage</button>
+                            <button id="btn-clear" class="btn-danger" style="padding: 0.5rem 1rem; font-size: 0.8rem;">Wipe My Storage</button>
                         </div>
                     </div>
                 </div>
@@ -72,6 +110,7 @@
         </main>
     </div>
 
+    <!-- Conflict Modal Popup -->
     <div id="conflict-modal" class="modal-overlay">
         <div class="modal-box">
             <div class="modal-title">⚠️ ID Collision Found</div>
