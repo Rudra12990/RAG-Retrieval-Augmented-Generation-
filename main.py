@@ -22,7 +22,7 @@ app = FastAPI(title="Vibe Coder Secure AI Workspace - Final Production Build")
 # 2. Setup Open-Source DDOS Traffic Limiter (Tracks incoming connection IPs)
 limiter = Limiter(key_func=get_remote_address)
 app.state.limiter = limiter
-app.add_exception_handler(RateLimitExceeded, rate_limit_exceeded_handler)
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler) # 🟢 Fixed with underscore
 
 # 3. Enable Secure Cross-Origin Communications (CORS Gateway)
 app.add_middleware(
