@@ -3,187 +3,527 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Knowledge Base</title>
+    <title>Vibe Coder AI Knowledge Base</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f4f6f9; margin: 0; padding: 40px; color: #333; }
-        .container { max-width: 600px; background: white; margin: 0 auto; padding: 30px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
-        h1 { margin-top: 0; color: #1a1a1a; font-size: 24px; text-align: center; }
-        .section { margin-bottom: 25px; padding-bottom: 25px; border-bottom: 1px solid #eee; }
-        label { display: block; font-weight: 600; margin-bottom: 8px; font-size: 14px; }
-        input, textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; font-size: 14px; margin-bottom: 12px; }
-        
-        /* Buttons */
-        button { background: #0070f3; color: white; border: none; padding: 10px 16px; border-radius: 6px; cursor: pointer; font-weight: 500; font-size: 14px; width: 100%; margin-bottom: 10px; transition: background 0.2s; }
-        button:hover { background: #0060df; }
-        .btn-secondary { background: #64748b; }
-        .btn-secondary:hover { background: #475569; }
-        .btn-success { background: #10b981; }
-        .btn-success:hover { background: #059669; }
-        .btn-danger { background: #dc3545; }
-        .btn-danger:hover { background: #bd2130; }
-        
-        .output { background: #f8f9fa; padding: 15px; border-left: 4px solid #10b981; border-radius: 4px; margin-top: 15px; font-size: 14px; white-space: pre-wrap; display: none; }
-        
-        /* Modern Accordion Dropdown Styling */
-        details { margin-top: 15px; background-color: #f8f9fa; border: 1px solid #e2e8f0; padding: 12px; border-radius: 6px; }
-        summary { font-weight: 600; cursor: pointer; color: #4a5568; font-size: 14px; outline: none; user-select: none; }
-        .context-box { margin-top: 10px; white-space: pre-wrap; font-family: monospace; font-size: 13px; color: #4a5568; line-height: 1.4; background: #edf2f7; padding: 10px; border-radius: 4px; }
+        :root {
+            --bg-gradient: linear-gradient(135deg, #0f172a 0%, #020617 100%);
+            --panel-bg: rgba(30, 41, 59, 0.4);
+            --panel-border: rgba(255, 255, 255, 0.08);
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --accent-primary: #3b82f6;
+            --accent-hover: #2563eb;
+            --accent-success: #10b981;
+            --accent-danger: #ef4444;
+            --accent-warning: #f59e0b;
+        }
 
-        /* Modern Custom Modal Background overlay */
-        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.4); display: flex; align-items: center; justify-content: center; z-index: 1000; opacity: 0; pointer-events: none; transition: opacity 0.2s ease; }
-        .modal-overlay.active { opacity: 1; pointer-events: auto; }
-        
-        /* Modal Window Box */
-        .modal-box { background: white; padding: 25px; border-radius: 12px; max-width: 450px; width: 90%; box-shadow: 0 10px 25px rgba(0,0,0,0.15); text-align: center; transform: scale(0.9); transition: transform 0.2s ease; }
-        .modal-overlay.active .modal-box { transform: scale(1); }
-        .modal-box h4 { margin-top: 0; color: #1a1a1a; font-size: 18px; }
-        .modal-box p { color: #64748b; font-size: 14px; margin-bottom: 20px; line-height: 1.5; }
-        .modal-actions { display: flex; gap: 10px; justify-content: center; }
-        .modal-actions button { margin-bottom: 0; width: auto; flex: 1; }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        body {
+            background: var(--bg-gradient);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2rem 1rem;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 900px;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 1rem;
+        }
+
+        header h1 {
+            font-size: 2.25rem;
+            font-weight: 700;
+            letter-spacing: -0.05em;
+            background: linear-gradient(to right, #60a5fa, #a78bfa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+        }
+
+        header p {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            font-weight: 400;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+        }
+
+        @media (min-width: 768px) {
+            .grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        .panel {
+            background: var(--panel-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--panel-border);
+            border-radius: 16px;
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.2);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .panel:hover {
+            border-color: rgba(255, 255, 255, 0.15);
+        }
+
+        .full-width {
+            grid-column: 1 / -1;
+        }
+
+        .panel-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #f1f5f9;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            padding-bottom: 0.75rem;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        label {
+            font-size: 0.8rem;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-secondary);
+        }
+
+        input[type="text"], textarea {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid var(--panel-border);
+            border-radius: 8px;
+            padding: 0.75rem 1rem;
+            color: var(--text-primary);
+            font-size: 0.95rem;
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            width: 100%;
+        }
+
+        input[type="text"]:focus, textarea:focus {
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        button {
+            background: var(--accent-primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 0.75rem 1.2rem;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s, transform 0.1s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        button:hover {
+            background: var(--accent-hover);
+        }
+
+        button:active {
+            transform: scale(0.98);
+        }
+
+        button.btn-secondary {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--panel-border);
+            color: var(--text-primary);
+        }
+
+        button.btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        button.btn-danger {
+            background: var(--accent-danger);
+        }
+        button.btn-danger:hover {
+            background: #dc2626;
+        }
+
+        /* Logs and Output design */
+        .status-box {
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .status-success { background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.2); }
+        .status-error { background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.2); }
+        .status-info { background: rgba(59, 130, 246, 0.15); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.2); }
+
+        .ai-response {
+            background: rgba(15, 23, 42, 0.4);
+            border: 1px solid var(--panel-border);
+            border-radius: 8px;
+            padding: 1rem;
+            font-size: 0.95rem;
+            line-height: 1.6;
+            color: #e2e8f0;
+            min-height: 60px;
+            white-space: pre-wrap;
+        }
+
+        /* Collapsible Section */
+        details {
+            background: rgba(15, 23, 42, 0.3);
+            border: 1px solid var(--panel-border);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        summary {
+            padding: 0.75rem 1rem;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            user-select: none;
+            outline: none;
+            transition: background-color 0.2s;
+        }
+
+        summary:hover {
+            background: rgba(255, 255, 255, 0.02);
+            color: var(--text-primary);
+        }
+
+        .details-content {
+            padding: 1rem;
+            border-top: 1px solid var(--panel-border);
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            background: rgba(0, 0, 0, 0.1);
+            max-height: 150px;
+            overflow-y: auto;
+        }
+
+        /* Beautiful Sleek Custom Modal Popup Box */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(2, 6, 17, 0.8);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+            z-index: 1000;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .modal-box {
+            background: #1e293b;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 1.75rem;
+            width: 90%;
+            max-width: 480px;
+            transform: scale(0.95);
+            transition: transform 0.3s ease;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-overlay.active .modal-box {
+            transform: scale(1);
+        }
+
+        .modal-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #f8fafc;
+            margin-bottom: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .modal-text {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            line-height: 1.5;
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 0.75rem;
+            justify-content: flex-end;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(2px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <h1>🧠 Vibe Coder AI App</h1>
-    
-    <div class="section">
-        <h3>1. Add Information to Vector DB</h3>
-        <label>Document Title / ID</label>
-        <input type="text" id="docId" placeholder="e.g., standard-operating-procedure">
-        <label>Document Text Content</label>
-        <textarea id="docText" rows="3" placeholder="Paste the text or information you want the AI to remember here..."></textarea>
-        <button onclick="addDocument()">Save to Vector Database</button>
-        <div id="addOutput" class="output" style="border-left-color: #0070f3;"></div>
-        <button onclick="clearDB()" class="btn-danger" style="margin-bottom: 0;">Clear Database</button>
-    </div>
+    <div class="container">
+        <header>
+            <h1>Vibe Coder AI Knowledge Base</h1>
+            <p>Cloud-Connected Retrieval-Augmented Generation Space</p>
+        </header>
 
-    <div class="section" style="border: none; margin-bottom: 0; padding-bottom: 0;">
-        <h3>2. Ask AI Based on Knowledge</h3>
-        <label>Your Question</label>
-        <input type="text" id="question" placeholder="Ask something about your stored info...">
-        <button onclick="askAI()" class="btn-success">Query App</button>
-        
-        <div id="askOutput" class="output"></div>
-        
-        <details id="contextDropdown" style="display: none;">
-            <summary>🔍 View Retrieved Database Context (Click to expand)</summary>
-            <div id="context-display" class="context-box"></div>
-        </details>
-    </div>
-</div>
+        <div class="grid">
+            <div class="panel">
+                <div class="panel-title">💾 Manage Context Vectors</div>
+                
+                <div class="input-group">
+                    <label for="doc-id">Document ID / Key</label>
+                    <input type="text" id="doc-id" placeholder="e.g., system-spec-v2">
+                </div>
 
-<div id="conflictModal" class="modal-overlay">
-    <div class="modal-box">
-        <h4 id="modalTitle">⚠️ ID Conflict Detected</h4>
-        <p id="modalMessage">This ID already exists in your database memory. What would you like to do?</p>
-        <div class="modal-actions">
-            <button onclick="resolveConflict('overwrite')" class="btn-danger">Overwrite</button>
-            <button onclick="resolveConflict('append')" class="btn-success">Append Data</button>
-            <button onclick="closeModal()" class="btn-secondary">Cancel</button>
+                <div class="input-group">
+                    <label for="doc-content">Raw Content Block</label>
+                    <textarea id="doc-content" placeholder="Paste structural documents or context strings here..."></textarea>
+                </div>
+
+                <button id="btn-save">Save to Vector Database</button>
+                <div id="save-status" class="status-box"></div>
+            </div>
+
+            <div class="panel">
+                <div class="panel-title">🧠 Query Engine</div>
+                
+                <div class="input-group">
+                    <label for="query-text">Your Question</label>
+                    <textarea id="query-text" placeholder="What would you like to ask the AI models?"></textarea>
+                </div>
+
+                <button id="btn-query" class="btn-secondary">Query System Pipeline</button>
+                <div id="query-status" class="status-box"></div>
+            </div>
+
+            <div class="panel full-width">
+                <div class="panel-title">✨ Processed Inference Output</div>
+                
+                <div id="ai-output" class="ai-response">System awaiting processing commands...</div>
+
+                <details>
+                    <summary>🔍 View Retrieved Database Context</summary>
+                    <div id="retrieved-context" class="details-content">
+                        No operations performed yet.
+                    </div>
+                </details>
+
+                <div style="display: flex; justify-content: flex-end; margin-top: 0.5rem;">
+                    <button id="btn-clear" class="btn-danger" style="padding: 0.5rem 1rem; font-size: 0.8rem;">Wipe Cloud Storage</button>
+                </div>
+            </div>
         </div>
     </div>
-</div>
 
-<script>
-    const BACKEND_URL = "https://rag-retrieval-augmented-generation.onrender.com";
-    
-    // Store temporarily for modal callbacks
-    let activeId = "";
-    let activeText = "";
+    <div id="conflict-modal" class="modal-overlay">
+        <div class="modal-box">
+            <div class="modal-title">⚠️ ID Collision Found</div>
+            <div id="modal-desc" class="modal-text">This key matches an active record inside the database table. Choose an override strategy:</div>
+            <div class="modal-buttons">
+                <button id="modal-cancel" class="btn-secondary" style="padding: 0.5rem 1rem;">Cancel</button>
+                <button id="modal-append" style="background: var(--accent-warning); padding: 0.5rem 1rem;">Append Data</button>
+                <button id="modal-overwrite" class="btn-danger" style="padding: 0.5rem 1rem;">Overwrite</button>
+            </div>
+        </div>
+    </div>
 
-    async function addDocument() {
-        activeId = document.getElementById('docId').value;
-        activeText = document.getElementById('docText').value;
-        const outDiv = document.getElementById('addOutput');
-        
-        if(!activeId || !activeText) return alert("Please fill in both fields");
+    <script>
+        // Update your server's base API endpoint route here
+        const API_URL = "https://rag-retrieval-augmented-generation.onrender.com";
 
-        outDiv.style.display = "block";
-        outDiv.innerText = "Processing...";
+        // Element Selectors
+        const docIdInput = document.getElementById("doc-id");
+        const docContentInput = document.getElementById("doc-content");
+        const btnSave = document.getElementById("btn-save");
+        const saveStatus = document.getElementById("save-status");
 
-        try {
-            const res = await fetch(`${BACKEND_URL}/add?doc_id=${encodeURIComponent(activeId)}&text_content=${encodeURIComponent(activeText)}&mode=check`, { method: 'POST' });
-            const data = await res.json();
-            
-            if (data.status === "exists_warning") {
-                // Open the custom beautifully styled popup container instead of prompt()
-                document.getElementById('modalMessage').innerText = `The ID "${activeId}" already exists in your knowledge base. Choose an option below:`;
-                document.getElementById('conflictModal').classList.add('active');
-            } else {
-                outDiv.style.display = "block";
-                outDiv.innerText = data.message || JSON.stringify(data);
+        const queryTextInput = document.getElementById("query-text");
+        const btnQuery = document.getElementById("btn-query");
+        const queryStatus = document.getElementById("query-status");
+
+        const aiOutput = document.getElementById("ai-output");
+        const retrievedContext = document.getElementById("retrieved-context");
+        const btnClear = document.getElementById("btn-clear");
+
+        const conflictModal = document.getElementById("conflict-modal");
+        const modalDesc = document.getElementById("modal-desc");
+        const modalCancel = document.getElementById("modal-cancel");
+        const modalAppend = document.getElementById("modal-append");
+        const modalOverwrite = document.getElementById("modal-overwrite");
+
+        // Helper: Flash Status Messages Smoothly
+        function showStatus(element, text, type) {
+            element.className = `status-box status-${type}`;
+            element.innerText = text;
+            element.style.display = "block";
+        }
+
+        // Action: Save Document Path Entry point
+        async function saveDocument(mode = "check") {
+            const docId = docIdInput.value.trim();
+            const textContent = docContentInput.value.trim();
+
+            if (!docId || !textContent) {
+                showStatus(saveStatus, "Please complete all fields.", "error");
+                return;
             }
-        } catch (err) {
-            outDiv.innerText = "Error linking to backend server. Make sure your Python server is running.";
-        }
-    }
 
-    // Handles the explicit button choices right from the custom popup window
-    async function resolveConflict(chosenMode) {
-        closeModal();
-        const outDiv = document.getElementById('addOutput');
-        outDiv.innerText = "Executing choice...";
+            btnSave.disabled = true;
+            showStatus(saveStatus, "Syncing cloud parameters...", "info");
 
-        try {
-            const res = await fetch(`${BACKEND_URL}/add?doc_id=${encodeURIComponent(activeId)}&text_content=${encodeURIComponent(activeText)}&mode=${chosenMode}`, { method: 'POST' });
-            const data = await res.json();
-            outDiv.innerText = data.message || JSON.stringify(data);
-        } catch (err) {
-            outDiv.innerText = "Failed to update record on live server.";
-        }
-    }
-
-    function closeModal() {
-        document.getElementById('conflictModal').classList.remove('active');
-        document.getElementById('addOutput').innerText = "Operation canceled. No changes were made.";
-    }
-
-    async function askAI() {
-        const q = document.getElementById('question').value;
-        const outDiv = document.getElementById('askOutput');
-        const dropdown = document.getElementById('contextDropdown');
-        const contextDiv = document.getElementById('context-display');
-        
-        if(!q) return alert("Please type a question");
-
-        outDiv.style.display = "block";
-        dropdown.style.display = "none"; 
-        outDiv.innerText = "Searching Vector DB & querying Gemini...";
-
-        try {
-            const res = await fetch(`${BACKEND_URL}/ask?question=${encodeURIComponent(q)}`, { method: 'POST' });
-            const data = await res.json();
-            
-            if (data.error) {
-                outDiv.innerText = data.error;
-            } else {
-                const context = data.retrieved_context || "No context found.";
-                const answer = data.answer || "No answer generated.";
+            try {
+                const response = await fetch(`${API_URL}/add?doc_id=${encodeURIComponent(docId)}&text_content=${encodeURIComponent(textContent)}&mode=${mode}`, {
+                    method: "POST"
+                });
                 
-                outDiv.innerText = answer;
-                contextDiv.innerText = context;
-                dropdown.style.display = "block"; 
-            }
-        } catch (err) {
-            outDiv.innerText = "Error linking to backend server.";
-        }
-    }
+                const data = await response.json();
 
-    async function clearDB() {
-        if(!confirm("Are you sure you want to clear your local database memory?")) return;
-        try {
-            const response = await fetch(`${BACKEND_URL}/clear`, { method: 'POST' });
-            const data = await response.json();
-            alert(data.message);
-            
-            document.getElementById('askOutput').style.display = "none";
-            document.getElementById('contextDropdown').style.display = "none";
-            document.getElementById('addOutput').style.display = "none";
-        } catch (err) {
-            alert("Failed to wipe database environment.");
+                if (!response.ok) throw new Error(data.detail || "Server communication failed.");
+
+                if (data.status === "exists_warning") {
+                    // Intercept duplicate warning state and activate overlay UI modal
+                    modalDesc.innerText = `The identifier '${docId}' already matches active content inside the cloud database. Choose a resolution matrix strategy:`;
+                    conflictModal.classList.add("active");
+                    saveStatus.style.display = "none";
+                } else {
+                    // Standard success route closure
+                    showStatus(saveStatus, data.message, "success");
+                    docIdInput.value = "";
+                    docContentInput.value = "";
+                    conflictModal.classList.remove("active");
+                }
+            } catch (err) {
+                showStatus(saveStatus, err.message, "error");
+            } finally {
+                btnSave.disabled = false;
+            }
         }
-    }
-</script>
+
+        // Action: Execute Pipeline Inference Prompt Inquiry
+        async function runQuery() {
+            const question = queryTextInput.value.trim();
+
+            if (!question) {
+                showStatus(queryStatus, "Please supply an inquiry statement.", "error");
+                return;
+            }
+
+            btnQuery.disabled = true;
+            aiOutput.innerText = "Synthesizing input matrices... Context generation processing...";
+            showStatus(queryStatus, "Processing AI query...", "info");
+
+            try {
+                const response = await fetch(`${API_URL}/ask?question=${encodeURIComponent(question)}`, {
+                    method: "POST"
+                });
+                
+                const data = await response.json();
+
+                if (!response.ok) throw new Error(data.detail || "Inference transaction failed.");
+
+                aiOutput.innerText = data.answer;
+                retrievedContext.innerText = data.retrieved_context;
+                queryStatus.style.display = "none";
+                queryTextInput.value = "";
+            } catch (err) {
+                aiOutput.innerText = "Processing broken.";
+                showStatus(queryStatus, err.message, "error");
+            } finally {
+                btnQuery.disabled = false;
+            }
+        }
+
+        // Action: Reset Cloud Dataset Cache
+        async function clearStorage() {
+            if (!confirm("Are you entirely sure you want to drop the persistent storage dataset? This action is absolute.")) return;
+            
+            try {
+                const response = await fetch(`${API_URL}/clear`, { method: "POST" });
+                const data = await response.json();
+                
+                if (!response.ok) throw new Error(data.detail);
+                
+                alert(data.message);
+                aiOutput.innerText = "System workspace cache flushed clean.";
+                retrievedContext.innerText = "No operations performed yet.";
+            } catch (err) {
+                alert(`Flush action failed: ${err.message}`);
+            }
+        }
+
+        // Event Listener Subscriptions Matrix
+        btnSave.addEventListener("click", () => saveDocument("check"));
+        btnQuery.addEventListener("click", runQuery);
+        btnClear.addEventListener("click", clearStorage);
+
+        // Modal Option Click Routers
+        modalCancel.addEventListener("click", () => {
+            conflictModal.classList.remove("active");
+            showStatus(saveStatus, "Operation aborted.", "info");
+        });
+        modalAppend.addEventListener("click", () => saveDocument("append"));
+        modalOverwrite.addEventListener("click", () => saveDocument("overwrite"));
+    </script>
 </body>
 </html>

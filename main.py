@@ -124,6 +124,40 @@ def add_to_database(doc_id: str, text_content: str, mode: str = "check"):
     except Exception as e:
         # Pass the real database error code back to your frontend screen to see exactly what is blocking it
         raise HTTPException(status_code=500, detail=f"Cloud write failure: {str(e)}")
+    
+
+@app.get("/documents")
+def list_all_document_ids():
+    """Fetches a clean list of all unique document IDs currently inside the database."""
+    target_url = f"{SUPABASE_URL}/rest/v1/documents?select=id"
+    
+    try:
+        with httpx.Client() as http_client:
+            res = http_client.get(target_url, headers=get_auth_headers())
+            records = res.json() if res.status_code == 200 else []
+            
+        # Extract just the raw string IDs into a clean array list
+        ids_list = [row["id"] for row in records]
+        return {"status": "success", "documents": ids_list}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to retrieve index list: {str(e)}")
+
+
+@app.delete("/documents/{doc_id}")
+def delete_document(doc_id: str):
+    """Deletes a specific document from the database by its ID key."""
+    target_url = f"{SUPABASE_URL}/rest/v1/documents?id=eq.{encode_query_param(doc_id)}"
+    
+    try:
+        with httpx.Client() as http_client:
+            res = http_client.delete(target_url, headers=get_auth_headers())
+            
+        if res.status_code not in [200, 204]:
+            raise Exception(res.text)
+            
+        return {"status": "success", "message": f"Document '{doc_id}' successfully deleted."}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Deletion sequence failed: {str(e)}")
 
 
 @app.post("/ask")
