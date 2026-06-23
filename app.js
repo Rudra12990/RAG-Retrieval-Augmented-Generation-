@@ -1,10 +1,10 @@
-// ⚡ Configuration Parameters - ENTER YOUR ACTUAL VALUES HERE
+//  Configuration Parameters 
 const SUPABASE_PROJECT_URL = "https://vizpndniifwpwmqnjvvi.supabase.co"; 
 const SUPABASE_ANON_PUBLIC_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZpenBuZG5paWZ3cHdtcW5qdnZpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIxNTAyMjYsImV4cCI6MjA5NzcyNjIyNn0.FQ8WGVVVbA-vbH8pc6nkj1tHc_3fbfFvmOWc4Nn8WeY";
 const API_URL = "https://rag-retrieval-augmented-generation.onrender.com";
 
 
-// 🚀 Initialize browser-side Supabase client engine (FIXED variable collision name)
+//  Initialize browser-side Supabase client engine (
 const supabaseClient = supabase.createClient(SUPABASE_PROJECT_URL, SUPABASE_ANON_PUBLIC_KEY);
 
 // State monitoring parameters
@@ -56,7 +56,7 @@ function getAuthFetchHeaders() {
     };
 }
 
-// 🔄 Monitor Authentication State Changes Across Sessions
+//  Monitor Authentication State Changes Across Sessions
 supabaseClient.auth.onAuthStateChange((event, session) => {
     if (session) {
         userSessionToken = session.access_token;
@@ -128,13 +128,13 @@ btnToggleAuthMode.addEventListener("click", () => {
 });
 
 // Log Out Action
-// Log Out Action with Interface State Teardown
+
 btnLogout.addEventListener("click", async () => {
     try {
-        // 1. Terminate the active authentication session with Supabase
+      
         await supabaseClient.auth.signOut();
         
-        // 2. 🧼 Flush all UI state fields to prevent data leaking on lookups
+     
         docIdInput.value = "";
         docContentInput.value = "";
         queryTextInput.value = "";
@@ -142,11 +142,11 @@ btnLogout.addEventListener("click", async () => {
         saveStatus.style.display = "none";
         queryStatus.style.display = "none";
         
-        // Reset responses and context back to pristine clean state
+    
         aiOutput.innerText = "System awaiting processing commands...";
         retrievedContext.innerText = "No queries compiled yet.";
         
-        // Clear the sidebar registry node elements
+       
         docListTarget.innerHTML = `<li style="font-size: 0.8rem; color: var(--text-secondary); text-align: center; padding-top: 1rem;">Loading workspace elements...</li>`;
         
     } catch (err) {
@@ -154,7 +154,7 @@ btnLogout.addEventListener("click", async () => {
     }
 });
 
-// 🔄 Sync Vector Items list view from Backend Engine
+// Sync Vector Items list view from Backend Engine
 async function fetchWorkspaceIndexes() {
     try {
         const response = await fetch(`${API_URL}/documents`, {
@@ -182,7 +182,7 @@ async function fetchWorkspaceIndexes() {
     }
 }
 
-// 🗑️ Drop explicit single key index row parameters
+//  Drop explicit single key index row parameters
 async function deleteIndexTarget(docId) {
     if (!confirm(`Remove index entry '${docId}' from database securely?`)) return;
     
