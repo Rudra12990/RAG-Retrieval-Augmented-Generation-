@@ -3,383 +3,75 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vibe Coder AI Knowledge Base</title>
+    <title>Vibe Coder AI Workspace Dashboard</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --bg-gradient: linear-gradient(135deg, #0f172a 0%, #020617 100%);
-            --panel-bg: rgba(30, 41, 59, 0.4);
-            --panel-border: rgba(255, 255, 255, 0.08);
-            --text-primary: #f8fafc;
-            --text-secondary: #94a3b8;
-            --accent-primary: #3b82f6;
-            --accent-hover: #2563eb;
-            --accent-success: #10b981;
-            --accent-danger: #ef4444;
-            --accent-warning: #f59e0b;
-        }
-
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: 'Inter', sans-serif;
-            -webkit-font-smoothing: antialiased;
-        }
-
-        body {
-            background: var(--bg-gradient);
-            color: var(--text-primary);
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 2rem 1rem;
-        }
-
-        .container {
-            width: 100%;
-            max-width: 900px;
-            display: flex;
-            flex-direction: column;
-            gap: 1.5rem;
-        }
-
-        header {
-            text-align: center;
-            margin-bottom: 1rem;
-        }
-
-        header h1 {
-            font-size: 2.25rem;
-            font-weight: 700;
-            letter-spacing: -0.05em;
-            background: linear-gradient(to right, #60a5fa, #a78bfa);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            margin-bottom: 0.5rem;
-        }
-
-        header p {
-            color: var(--text-secondary);
-            font-size: 0.95rem;
-            font-weight: 400;
-        }
-
-        .grid {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 1.5rem;
-        }
-
-        @media (min-width: 768px) {
-            .grid {
-                grid-template-columns: 1fr 1fr;
-            }
-        }
-
-        .panel {
-            background: var(--panel-bg);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border: 1px solid var(--panel-border);
-            border-radius: 16px;
-            padding: 1.5rem;
-            display: flex;
-            flex-direction: column;
-            gap: 1.25rem;
-            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.2);
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
-        }
-
-        .panel:hover {
-            border-color: rgba(255, 255, 255, 0.15);
-        }
-
-        .full-width {
-            grid-column: 1 / -1;
-        }
-
-        .panel-title {
-            font-size: 1.1rem;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            color: #f1f5f9;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-            padding-bottom: 0.75rem;
-        }
-
-        .input-group {
-            display: flex;
-            flex-direction: column;
-            gap: 0.5rem;
-        }
-
-        label {
-            font-size: 0.8rem;
-            font-weight: 500;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            color: var(--text-secondary);
-        }
-
-        input[type="text"], textarea {
-            background: rgba(15, 23, 42, 0.6);
-            border: 1px solid var(--panel-border);
-            border-radius: 8px;
-            padding: 0.75rem 1rem;
-            color: var(--text-primary);
-            font-size: 0.95rem;
-            outline: none;
-            transition: border-color 0.2s, box-shadow 0.2s;
-            width: 100%;
-        }
-
-        input[type="text"]:focus, textarea:focus {
-            border-color: var(--accent-primary);
-            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
-        }
-
-        textarea {
-            resize: vertical;
-            min-height: 100px;
-        }
-
-        button {
-            background: var(--accent-primary);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            padding: 0.75rem 1.2rem;
-            font-size: 0.9rem;
-            font-weight: 500;
-            cursor: pointer;
-            transition: background-color 0.2s, transform 0.1s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.5rem;
-        }
-
-        button:hover {
-            background: var(--accent-hover);
-        }
-
-        button:active {
-            transform: scale(0.98);
-        }
-
-        button.btn-secondary {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid var(--panel-border);
-            color: var(--text-primary);
-        }
-
-        button.btn-secondary:hover {
-            background: rgba(255, 255, 255, 0.1);
-        }
-
-        button.btn-danger {
-            background: var(--accent-danger);
-        }
-        button.btn-danger:hover {
-            background: #dc2626;
-        }
-
-        /* Logs and Output design */
-        .status-box {
-            padding: 0.75rem 1rem;
-            border-radius: 8px;
-            font-size: 0.85rem;
-            font-weight: 500;
-            display: none;
-            animation: fadeIn 0.3s ease;
-        }
-
-        .status-success { background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.2); }
-        .status-error { background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.2); }
-        .status-info { background: rgba(59, 130, 246, 0.15); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.2); }
-
-        .ai-response {
-            background: rgba(15, 23, 42, 0.4);
-            border: 1px solid var(--panel-border);
-            border-radius: 8px;
-            padding: 1rem;
-            font-size: 0.95rem;
-            line-height: 1.6;
-            color: #e2e8f0;
-            min-height: 60px;
-            white-space: pre-wrap;
-        }
-
-        /* Collapsible Section */
-        details {
-            background: rgba(15, 23, 42, 0.3);
-            border: 1px solid var(--panel-border);
-            border-radius: 8px;
-            overflow: hidden;
-        }
-
-        summary {
-            padding: 0.75rem 1rem;
-            cursor: pointer;
-            font-size: 0.85rem;
-            font-weight: 500;
-            color: var(--text-secondary);
-            user-select: none;
-            outline: none;
-            transition: background-color 0.2s;
-        }
-
-        summary:hover {
-            background: rgba(255, 255, 255, 0.02);
-            color: var(--text-primary);
-        }
-
-        .details-content {
-            padding: 1rem;
-            border-top: 1px solid var(--panel-border);
-            font-size: 0.85rem;
-            color: var(--text-secondary);
-            background: rgba(0, 0, 0, 0.1);
-            max-height: 150px;
-            overflow-y: auto;
-        }
-
-        /* Beautiful Sleek Custom Modal Popup Box */
-        .modal-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(2, 6, 17, 0.8);
-            backdrop-filter: blur(8px);
-            -webkit-backdrop-filter: blur(8px);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.3s ease;
-            z-index: 1000;
-        }
-
-        .modal-overlay.active {
-            opacity: 1;
-            pointer-events: auto;
-        }
-
-        .modal-box {
-            background: #1e293b;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 16px;
-            padding: 1.75rem;
-            width: 90%;
-            max-width: 480px;
-            transform: scale(0.95);
-            transition: transform 0.3s ease;
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
-        }
-
-        .modal-overlay.active .modal-box {
-            transform: scale(1);
-        }
-
-        .modal-title {
-            font-size: 1.25rem;
-            font-weight: 600;
-            color: #f8fafc;
-            margin-bottom: 0.75rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .modal-text {
-            font-size: 0.9rem;
-            color: var(--text-secondary);
-            line-height: 1.5;
-            margin-bottom: 1.5rem;
-        }
-
-        .modal-buttons {
-            display: flex;
-            gap: 0.75rem;
-            justify-content: flex-end;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(2px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.0/marked.min.js"></script>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-    <div class="container">
-        <header>
-            <h1>Vibe Coder AI Knowledge Base</h1>
-            <p>Cloud-Connected Retrieval-Augmented Generation Space</p>
-        </header>
+    <div class="app-layout">
+        <aside class="sidebar">
+            <div class="sidebar-title">📁 Active Indexes</div>
+            <ul id="doc-list-target" class="doc-list">
+                <li style="font-size: 0.8rem; color: var(--text-secondary); text-align: center; padding-top: 1rem;">Loading workspace elements...</li>
+            </ul>
+        </aside>
 
-        <div class="grid">
-            <div class="panel">
-                <div class="panel-title">💾 Manage Context Vectors</div>
-                
-                <div class="input-group">
-                    <label for="doc-id">Document ID / Key</label>
-                    <input type="text" id="doc-id" placeholder="e.g., system-spec-v2">
-                </div>
+        <main class="main-content">
+            <div class="container">
+                <header>
+                    <h1>Vibe Coder AI Workspace</h1>
+                    <p>Production Cloud RAG Suite Layer</p>
+                </header>
 
-                <div class="input-group">
-                    <label for="doc-content">Raw Content Block</label>
-                    <textarea id="doc-content" placeholder="Paste structural documents or context strings here..."></textarea>
-                </div>
-
-                <button id="btn-save">Save to Vector Database</button>
-                <div id="save-status" class="status-box"></div>
-            </div>
-
-            <div class="panel">
-                <div class="panel-title">🧠 Query Engine</div>
-                
-                <div class="input-group">
-                    <label for="query-text">Your Question</label>
-                    <textarea id="query-text" placeholder="What would you like to ask the AI models?"></textarea>
-                </div>
-
-                <button id="btn-query" class="btn-secondary">Query System Pipeline</button>
-                <div id="query-status" class="status-box"></div>
-            </div>
-
-            <div class="panel full-width">
-                <div class="panel-title">✨ Processed Inference Output</div>
-                
-                <div id="ai-output" class="ai-response">System awaiting processing commands...</div>
-
-                <details>
-                    <summary>🔍 View Retrieved Database Context</summary>
-                    <div id="retrieved-context" class="details-content">
-                        No operations performed yet.
+                <div class="grid">
+                    <div class="panel">
+                        <div class="panel-title">💾 Manage Context Vectors</div>
+                        <div class="input-group">
+                            <label for="doc-id">Document ID / Key</label>
+                            <input type="text" id="doc-id" placeholder="e.g., core-logic">
+                        </div>
+                        <div class="input-group">
+                            <label for="doc-content">Raw Content Block</label>
+                            <textarea id="doc-content" placeholder="Paste architectural specifications..."></textarea>
+                        </div>
+                        <button id="btn-save">Save to Vector Database</button>
+                        <div id="save-status" class="status-box"></div>
                     </div>
-                </details>
 
-                <div style="display: flex; justify-content: flex-end; margin-top: 0.5rem;">
-                    <button id="btn-clear" class="btn-danger" style="padding: 0.5rem 1rem; font-size: 0.8rem;">Wipe Cloud Storage</button>
+                    <div class="panel">
+                        <div class="panel-title">🧠 Query Engine</div>
+                        <div class="input-group">
+                            <label for="query-text">Your Question</label>
+                            <textarea id="query-text" placeholder="Query context indexes via Gemini..."></textarea>
+                        </div>
+                        <button id="btn-query" class="btn-secondary">Query System Pipeline</button>
+                        <div id="query-status" class="status-box"></div>
+                    </div>
+
+                    <div class="panel full-width">
+                        <div class="panel-title">✨ Processed Inference Output</div>
+                        <div id="ai-output" class="ai-response">System awaiting processing commands...</div>
+                        <details>
+                            <summary>🔍 View Retrieved Database Context</summary>
+                            <div id="retrieved-context" class="details-content">No queries compiled yet.</div>
+                        </details>
+                        <div style="display: flex; justify-content: flex-end; margin-top: 0.5rem;">
+                            <button id="btn-clear" class="btn-danger" style="padding: 0.5rem 1rem; font-size: 0.8rem;">Wipe Cloud Storage</button>
+                        </div>
+                    </div>
                 </div>
             </div>
-        </div>
+        </main>
     </div>
 
     <div id="conflict-modal" class="modal-overlay">
         <div class="modal-box">
             <div class="modal-title">⚠️ ID Collision Found</div>
-            <div id="modal-desc" class="modal-text">This key matches an active record inside the database table. Choose an override strategy:</div>
+            <div id="modal-desc" class="modal-text">Override strategy resolution required:</div>
             <div class="modal-buttons">
                 <button id="modal-cancel" class="btn-secondary" style="padding: 0.5rem 1rem;">Cancel</button>
                 <button id="modal-append" style="background: var(--accent-warning); padding: 0.5rem 1rem;">Append Data</button>
@@ -388,142 +80,6 @@
         </div>
     </div>
 
-    <script>
-        // Update your server's base API endpoint route here
-        const API_URL = "https://rag-retrieval-augmented-generation.onrender.com";
-
-        // Element Selectors
-        const docIdInput = document.getElementById("doc-id");
-        const docContentInput = document.getElementById("doc-content");
-        const btnSave = document.getElementById("btn-save");
-        const saveStatus = document.getElementById("save-status");
-
-        const queryTextInput = document.getElementById("query-text");
-        const btnQuery = document.getElementById("btn-query");
-        const queryStatus = document.getElementById("query-status");
-
-        const aiOutput = document.getElementById("ai-output");
-        const retrievedContext = document.getElementById("retrieved-context");
-        const btnClear = document.getElementById("btn-clear");
-
-        const conflictModal = document.getElementById("conflict-modal");
-        const modalDesc = document.getElementById("modal-desc");
-        const modalCancel = document.getElementById("modal-cancel");
-        const modalAppend = document.getElementById("modal-append");
-        const modalOverwrite = document.getElementById("modal-overwrite");
-
-        // Helper: Flash Status Messages Smoothly
-        function showStatus(element, text, type) {
-            element.className = `status-box status-${type}`;
-            element.innerText = text;
-            element.style.display = "block";
-        }
-
-        // Action: Save Document Path Entry point
-        async function saveDocument(mode = "check") {
-            const docId = docIdInput.value.trim();
-            const textContent = docContentInput.value.trim();
-
-            if (!docId || !textContent) {
-                showStatus(saveStatus, "Please complete all fields.", "error");
-                return;
-            }
-
-            btnSave.disabled = true;
-            showStatus(saveStatus, "Syncing cloud parameters...", "info");
-
-            try {
-                const response = await fetch(`${API_URL}/add?doc_id=${encodeURIComponent(docId)}&text_content=${encodeURIComponent(textContent)}&mode=${mode}`, {
-                    method: "POST"
-                });
-                
-                const data = await response.json();
-
-                if (!response.ok) throw new Error(data.detail || "Server communication failed.");
-
-                if (data.status === "exists_warning") {
-                    // Intercept duplicate warning state and activate overlay UI modal
-                    modalDesc.innerText = `The identifier '${docId}' already matches active content inside the cloud database. Choose a resolution matrix strategy:`;
-                    conflictModal.classList.add("active");
-                    saveStatus.style.display = "none";
-                } else {
-                    // Standard success route closure
-                    showStatus(saveStatus, data.message, "success");
-                    docIdInput.value = "";
-                    docContentInput.value = "";
-                    conflictModal.classList.remove("active");
-                }
-            } catch (err) {
-                showStatus(saveStatus, err.message, "error");
-            } finally {
-                btnSave.disabled = false;
-            }
-        }
-
-        // Action: Execute Pipeline Inference Prompt Inquiry
-        async function runQuery() {
-            const question = queryTextInput.value.trim();
-
-            if (!question) {
-                showStatus(queryStatus, "Please supply an inquiry statement.", "error");
-                return;
-            }
-
-            btnQuery.disabled = true;
-            aiOutput.innerText = "Synthesizing input matrices... Context generation processing...";
-            showStatus(queryStatus, "Processing AI query...", "info");
-
-            try {
-                const response = await fetch(`${API_URL}/ask?question=${encodeURIComponent(question)}`, {
-                    method: "POST"
-                });
-                
-                const data = await response.json();
-
-                if (!response.ok) throw new Error(data.detail || "Inference transaction failed.");
-
-                aiOutput.innerText = data.answer;
-                retrievedContext.innerText = data.retrieved_context;
-                queryStatus.style.display = "none";
-                queryTextInput.value = "";
-            } catch (err) {
-                aiOutput.innerText = "Processing broken.";
-                showStatus(queryStatus, err.message, "error");
-            } finally {
-                btnQuery.disabled = false;
-            }
-        }
-
-        // Action: Reset Cloud Dataset Cache
-        async function clearStorage() {
-            if (!confirm("Are you entirely sure you want to drop the persistent storage dataset? This action is absolute.")) return;
-            
-            try {
-                const response = await fetch(`${API_URL}/clear`, { method: "POST" });
-                const data = await response.json();
-                
-                if (!response.ok) throw new Error(data.detail);
-                
-                alert(data.message);
-                aiOutput.innerText = "System workspace cache flushed clean.";
-                retrievedContext.innerText = "No operations performed yet.";
-            } catch (err) {
-                alert(`Flush action failed: ${err.message}`);
-            }
-        }
-
-        // Event Listener Subscriptions Matrix
-        btnSave.addEventListener("click", () => saveDocument("check"));
-        btnQuery.addEventListener("click", runQuery);
-        btnClear.addEventListener("click", clearStorage);
-
-        // Modal Option Click Routers
-        modalCancel.addEventListener("click", () => {
-            conflictModal.classList.remove("active");
-            showStatus(saveStatus, "Operation aborted.", "info");
-        });
-        modalAppend.addEventListener("click", () => saveDocument("append"));
-        modalOverwrite.addEventListener("click", () => saveDocument("overwrite"));
-    </script>
+    <script src="app.js"></script>
 </body>
 </html>

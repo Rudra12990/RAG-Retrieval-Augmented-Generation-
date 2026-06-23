@@ -159,7 +159,7 @@ def delete_document(doc_id: str):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Deletion sequence failed: {str(e)}")
 
-
+ 
 @app.post("/ask")
 def ask_ai(question: str):
     """Retrieves all combined text context from Supabase and queries Gemini 2.5 Flash."""
