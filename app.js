@@ -128,7 +128,31 @@ btnToggleAuthMode.addEventListener("click", () => {
 });
 
 // Log Out Action
-btnLogout.addEventListener("click", () => supabaseClient.auth.signOut());
+// Log Out Action with Interface State Teardown
+btnLogout.addEventListener("click", async () => {
+    try {
+        // 1. Terminate the active authentication session with Supabase
+        await supabaseClient.auth.signOut();
+        
+        // 2. 🧼 Flush all UI state fields to prevent data leaking on lookups
+        docIdInput.value = "";
+        docContentInput.value = "";
+        queryTextInput.value = "";
+        
+        saveStatus.style.display = "none";
+        queryStatus.style.display = "none";
+        
+        // Reset responses and context back to pristine clean state
+        aiOutput.innerText = "System awaiting processing commands...";
+        retrievedContext.innerText = "No queries compiled yet.";
+        
+        // Clear the sidebar registry node elements
+        docListTarget.innerHTML = `<li style="font-size: 0.8rem; color: var(--text-secondary); text-align: center; padding-top: 1rem;">Loading workspace elements...</li>`;
+        
+    } catch (err) {
+        console.error("Teardown error layout:", err);
+    }
+});
 
 // 🔄 Sync Vector Items list view from Backend Engine
 async function fetchWorkspaceIndexes() {
