@@ -1,5 +1,1 @@
 .env
-.vscode
-__pycache__
-chroma_data
-node_modules

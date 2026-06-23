@@ -16,7 +16,7 @@
     --pre-block-bg: #0b0f19;
 }
 
-/* ☀️ Light Mode Explicit Target Attributes Override Matrix */
+/*  Light Mode Explicit Target Attributes Override Matrix */
 body.light-theme {
     --bg-gradient: linear-gradient(135deg, #f1f5f9 0%, #cbd5e1 100%);
     --panel-bg: rgba(255, 255, 255, 0.65);
@@ -419,7 +419,7 @@ summary:hover { background: rgba(255, 255, 255, 0.02); color: var(--text-primary
     text-decoration: underline;
 }
 
-/* 🌗 Theme Toggle Switch Box Design */
+/*  Theme Toggle Switch Box Design */
 .theme-switch-wrapper {
     display: flex;
     justify-content: flex-end;
