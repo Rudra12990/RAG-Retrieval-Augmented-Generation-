@@ -20,6 +20,7 @@ const modalDesc = document.getElementById("modal-desc");
 const modalCancel = document.getElementById("modal-cancel");
 const modalAppend = document.getElementById("modal-append");
 const modalOverwrite = document.getElementById("modal-overwrite");
+const themeToggleBtn = document.getElementById("theme-toggle");
 
 function showStatus(element, text, type) {
     element.className = `status-box status-${type}`;
@@ -157,6 +158,21 @@ async function clearStorage() {
         alert(`Flush action failed: ${err.message}`);
     }
 }
+
+// 🌗 Theme Switch State Controller Mechanism
+const currentSavedTheme = localStorage.getItem("themeWorkspacePreference");
+if (currentSavedTheme === "light") {
+    document.body.classList.add("light-theme");
+}
+
+themeToggleBtn.addEventListener("click", () => {
+    document.body.classList.toggle("light-theme");
+    let activeTheme = "dark";
+    if (document.body.classList.contains("light-theme")) {
+        activeTheme = "light";
+    }
+    localStorage.setItem("themeWorkspacePreference", activeTheme);
+});
 
 // Event Listener Subscriptions Matrix
 btnSave.addEventListener("click", () => saveDocument("check"));

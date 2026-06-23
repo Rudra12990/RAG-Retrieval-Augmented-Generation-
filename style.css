@@ -10,6 +10,28 @@
     --accent-danger: #ef4444;
     --accent-warning: #f59e0b;
     --sidebar-width: 280px;
+    --sidebar-bg: rgba(15, 23, 42, 0.6);
+    --input-bg: rgba(15, 23, 42, 0.6);
+    --inner-code-bg: rgba(15, 23, 42, 0.8);
+    --pre-block-bg: #0b0f19;
+}
+
+/* ☀️ Light Mode Explicit Target Attributes Override Matrix */
+body.light-theme {
+    --bg-gradient: linear-gradient(135deg, #f1f5f9 0%, #cbd5e1 100%);
+    --panel-bg: rgba(255, 255, 255, 0.65);
+    --panel-border: rgba(15, 23, 42, 0.08);
+    --text-primary: #0f172a;
+    --text-secondary: #475569;
+    --sidebar-bg: rgba(255, 255, 255, 0.8);
+    --input-bg: rgba(255, 255, 255, 0.9);
+    --inner-code-bg: rgba(15, 23, 42, 0.08);
+    --pre-block-bg: #f8fafc;
+}
+
+/* Apply smooth universal color transition interpolation */
+body, aside, main, .panel, input, textarea, button, div, span {
+    transition: background 0.3s ease, color 0.3s ease, border-color 0.3s ease, background-color 0.3s ease;
 }
 
 * {
@@ -36,7 +58,7 @@ body {
 /* Sidebar Interface Dock Styles */
 .sidebar {
     width: var(--sidebar-width);
-    background: rgba(15, 23, 42, 0.6);
+    background: var(--sidebar-bg);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
     border-right: 1px solid var(--panel-border);
@@ -91,7 +113,7 @@ body {
     text-overflow: ellipsis;
     white-space: nowrap;
     max-width: 130px;
-    color: #e2e8f0;
+    color: var(--text-primary);
 }
 
 .btn-trash {
@@ -135,8 +157,7 @@ header h1 {
     font-size: 2.25rem;
     font-weight: 700;
     letter-spacing: -0.05em;
-    background: linear-gradient(to right, #60a5fa, #a78bfa);
-    background-clip: text;
+    background: linear-gradient(to right, #3b82f6, #a78bfa);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     margin-bottom: 0.25rem;
@@ -182,7 +203,7 @@ header p {
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    color: #f1f5f9;
+    color: var(--text-primary);
     border-bottom: 1px solid rgba(255, 255, 255, 0.05);
     padding-bottom: 0.75rem;
 }
@@ -202,7 +223,7 @@ label {
 }
 
 input[type="text"], textarea {
-    background: rgba(15, 23, 42, 0.6);
+    background: var(--input-bg);
     border: 1px solid var(--panel-border);
     border-radius: 8px;
     padding: 0.75rem 1rem;
@@ -273,20 +294,15 @@ button.btn-danger:hover { background: #dc2626; }
     padding: 1.25rem;
     font-size: 0.95rem;
     line-height: 1.6;
-    color: #e2e8f0;
+    color: var(--text-primary);
     min-height: 60px;
 }
 
-.ai-response p {
-    margin-bottom: 0.8rem;
-}
-
-.ai-response p:last-child {
-    margin-bottom: 0;
-}
+.ai-response p { margin-bottom: 0.8rem; }
+.ai-response p:last-child { margin-bottom: 0; }
 
 .ai-response code {
-    background: rgba(15, 23, 42, 0.8);
+    background: var(--inner-code-bg);
     padding: 2px 6px;
     border-radius: 4px;
     font-family: 'Courier New', Courier, monospace;
@@ -295,7 +311,7 @@ button.btn-danger:hover { background: #dc2626; }
 }
 
 .ai-response pre {
-    background: #0b0f19;
+    background: var(--pre-block-bg);
     border: 1px solid var(--panel-border);
     border-radius: 8px;
     padding: 1rem;
@@ -380,8 +396,32 @@ summary:hover { background: rgba(255, 255, 255, 0.02); color: var(--text-primary
 .modal-overlay.active .modal-box { transform: scale(1); }
 
 .modal-title { font-size: 1.25rem; font-weight: 600; color: #f8fafc; margin-bottom: 0.75rem; }
-.modal-text { font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 1.5rem; line-height: 1.5; }
+.modal-text { font-size: 0.9rem; color: #94a3b8; margin-bottom: 1.5rem; line-height: 1.5; }
 .modal-buttons { display: flex; gap: 0.75rem; justify-content: flex-end; }
+
+/* 🌗 Theme Toggle Switch Box Design */
+.theme-switch-wrapper {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.theme-toggle-btn {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--panel-border);
+    color: var(--text-primary);
+    padding: 0.5rem 0.8rem;
+    font-size: 0.8rem;
+    border-radius: 20px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.theme-toggle-btn:hover { background: rgba(255, 255, 255, 0.12); }
 
 @keyframes fadeIn {
     from { opacity: 0; transform: translateY(2px); }
