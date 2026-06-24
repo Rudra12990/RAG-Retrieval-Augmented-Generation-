@@ -125,30 +125,35 @@ SUPABASE_URL="[https://your-project-id.supabase.co](https://your-project-id.supa
 SUPABASE_KEY="your-supabase-anon-public-key"
 GEMINI_API_KEY="AIzaSyYourActualGeminiAPIKeyHere"
 ```
-3️⃣ Run the Backend Server
+### 3️⃣ Run the Backend Server
 Open your terminal in the project root and execute:
 
-Bash
-# Setup virtual environment
+ **Setup virtual environment**
+ 
 python -m venv venv
-source venv/bin/activate  # On Windows use: venv\Scripts\activate
+source venv/bin/activate 
+On Windows use: venv\Scripts\activate
 
-# Install dependencies & launch server
+**Install dependencies & launch server**
+
 pip install -r requirements.txt
 uvicorn main: app --reload
-The API is now live at http://127.0.0.1:8000. Keep this terminal running.
 
-4️⃣ Run the Frontend
+The API is now live at http://127.0.0.1:8000. 
+Keep this terminal running.
+
+### 4️⃣ Run the Frontend
 Ensure your app.js API destination matches your local server endpoint (http://127.0.0.1:8000).
+
 
 Open index.html using the VS Code Live Server extension, or spin up a quick server in a separate terminal:
 
-Bash
+
 python -m http.server 5500
 Open http://localhost:5500 in your browser, sign up, and start testing!
 
 
-Save your `README.md`, commit it in GitHub Desktop as `docs: condense setup instructions`, and push it to the origin! You are all set.
+
 
 
 
